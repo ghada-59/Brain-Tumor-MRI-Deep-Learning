@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+
+# Local data and trained weights (do not commit medical-image datasets)
+data/*
+!data/.gitkeep
+artifacts/*.keras
+artifacts/*.h5
+artifacts/*.weights.h5
+artifacts/logs/
+!artifacts/.gitkeep
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# TensorFlow logs
+logs/
