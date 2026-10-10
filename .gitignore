@@ -23,3 +23,11 @@ Thumbs.db
 
 # TensorFlow logs
 logs/
+
+# All trained models and checkpoints
+*.keras
+*.h5
+*.weights.h5
+*.ckpt
+*.ckpt.*
+checkpoints/

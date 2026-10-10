@@ -1,0 +1,19 @@
+{
+  "architecture": "MobileNetV2 transfer learning",
+  "image_size": [
+    224,
+    224
+  ],
+  "batch_size": 32,
+  "requested_epochs": 10,
+  "actual_epochs": 5,
+  "weights": "imagenet",
+  "validation_split": 0.15,
+  "seed": 42,
+  "class_names": [
+    "glioma",
+    "meningioma",
+    "notumor",
+    "pituitary"
+  ]
+}

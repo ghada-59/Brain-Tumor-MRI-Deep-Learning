@@ -1,0 +1,6 @@
+{
+  "test_accuracy": 0.7761100687929956,
+  "test_macro_f1": 0.765487161344645,
+  "test_weighted_f1": 0.7655181026059036,
+  "test_image_count": 1599
+}
