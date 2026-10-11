@@ -44,6 +44,14 @@ The MRI dataset and trained model weights are intentionally excluded from this r
 
 The main weakness is recall for glioma (66.4%) and meningioma (64.3%), so accuracy alone is not sufficient. These are dataset-specific results, not clinical performance claims. The repository tracks aggregate reports, but does not include the trained model or dataset; GitHub Actions tests code only and does not retrain the model.
 
+### Evaluation visualizations
+
+![Confusion matrix](reports/confusion_matrix.png)
+
+![Per-class metrics](reports/class_metrics.png)
+
+![Training curves](reports/training_curves.png)
+
 ## 1. Prepare the dataset
 
 Download the [Brain Tumor MRI Dataset on Kaggle](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset) yourself and check its current terms. Do not commit the dataset, patient images, or trained weights.
@@ -110,6 +118,5 @@ The Streamlit demo expects local trained model files in `artifacts/`. Its output
 - Accuracy alone is insufficient; inspect macro F1, per-class recall, and the confusion matrix.
 - Performance on this dataset does not establish generalization to other hospitals, scanners, protocols, or patient populations.
 - Dataset provenance, label quality, patient-level separation, and licensing must be checked before making stronger claims.
-- These results do not establish generalization to other hospitals, scanners, protocols, or patient populations.
-- Dataset provenance, label quality, possible duplicate images, patient-level separation, and licensing should be checked before stronger claims.
+- Possible duplicate images, patient-level separation, label quality, and dataset licensing should be checked before stronger claims.
 - This project does not include external validation, calibration, clinical review, DICOM/3D processing, or tumour segmentation.
