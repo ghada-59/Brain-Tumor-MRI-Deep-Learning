@@ -31,8 +31,10 @@ def test_load_datasets_returns_expected_shapes_and_all_splits(tmp_path: Path) ->
     assert tuple(val_images.shape[1:]) == (16, 16, 3)
     assert tuple(test_images.shape[1:]) == (16, 16, 3)
     assert set(train_labels.numpy().tolist()) <= {0, 1}
-    assert set(val_labels.numpy().tolist()) == {0, 1}
-    assert set(test_labels.numpy().tolist()) == {0, 1}
+    all_val_labels = {int(label) for _, labels in val_ds for label in labels.numpy().tolist()}
+    all_test_labels = {int(label) for _, labels in test_ds for label in labels.numpy().tolist()}
+    assert all_val_labels == {0, 1}
+    assert all_test_labels == {0, 1}
 
 
 def test_load_datasets_rejects_class_folder_mismatch(tmp_path: Path) -> None:
