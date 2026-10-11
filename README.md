@@ -33,7 +33,16 @@ The dataset classes are `glioma`, `meningioma`, `notumor` (no tumor), and `pitui
 - `artifacts/` — aggregate JSON metrics/configuration are tracked; trained model files and checkpoints are excluded
 - `reports/` — aggregate plots and CSV reports are tracked; example images drawn from the test dataset are not published
 
-The MRI dataset and trained model weights are intentionally excluded from this repository. The tracked aggregate reports describe a previous run until you retrain using the corrected split; do not treat those older scores as the current validated result.
+The MRI dataset and trained model weights are intentionally excluded from this repository. The latest recorded local run used MobileNetV2 with ImageNet initialization, 224 × 224 input images, batch size 32, seed 42, and a 15% class-stratified validation split. On the separate `Testing/` folder (1,599 images), it achieved **81.93% test accuracy**, **0.8123 macro F1**, and **0.8123 weighted F1**.
+
+| Class | Precision | Recall | F1-score | Test images |
+|---|---:|---:|---:|---:|
+| Glioma | 0.927 | 0.664 | 0.774 | 399 |
+| Meningioma | 0.739 | 0.643 | 0.687 | 400 |
+| No tumor | 0.875 | 0.978 | 0.923 | 400 |
+| Pituitary | 0.766 | 0.993 | 0.865 | 400 |
+
+The main weakness is recall for glioma (66.4%) and meningioma (64.3%), so accuracy alone is not sufficient. These are dataset-specific results, not clinical performance claims. The repository tracks aggregate reports, but does not include the trained model or dataset; GitHub Actions tests code only and does not retrain the model.
 
 ## 1. Prepare the dataset
 
@@ -101,4 +110,6 @@ The Streamlit demo expects local trained model files in `artifacts/`. Its output
 - Accuracy alone is insufficient; inspect macro F1, per-class recall, and the confusion matrix.
 - Performance on this dataset does not establish generalization to other hospitals, scanners, protocols, or patient populations.
 - Dataset provenance, label quality, patient-level separation, and licensing must be checked before making stronger claims.
-- No current performance claim is made here: the tracked metrics were generated before the corrected split and must be regenerated before being reported as current results.
+- These results do not establish generalization to other hospitals, scanners, protocols, or patient populations.
+- Dataset provenance, label quality, possible duplicate images, patient-level separation, and licensing should be checked before stronger claims.
+- This project does not include external validation, calibration, clinical review, DICOM/3D processing, or tumour segmentation.
