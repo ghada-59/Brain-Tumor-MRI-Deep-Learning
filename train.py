@@ -3,11 +3,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import platform
+import sys
 from pathlib import Path
 
+import numpy as np
+import sklearn
 import tensorflow as tf
 
-from src.brain_tumor_dl.data import load_datasets
+from src.brain_tumor_dl.data import count_images_by_class, load_datasets
 from src.brain_tumor_dl.evaluation import evaluate_and_visualize, save_training_curves
 from src.brain_tumor_dl.model import build_model
 
@@ -28,9 +32,16 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    if args.epochs < 1 or args.batch_size < 1:
-        raise SystemExit("--epochs and --batch-size must be positive integers.")
+    if args.epochs < 1 or args.batch_size < 1 or args.image_size < 1:
+        raise SystemExit("--epochs, --batch-size, and --image-size must be positive integers.")
+    if not 0.0 < args.validation_split < 1.0:
+        raise SystemExit("--validation-split must be strictly between 0 and 1.")
     tf.keras.utils.set_random_seed(args.seed)
+    try:
+        tf.config.experimental.enable_op_determinism()
+    except (AttributeError, RuntimeError):
+        # Some devices/ops do not support deterministic execution.
+        pass
     args.output_dir.mkdir(parents=True, exist_ok=True)
     args.reports_dir.mkdir(parents=True, exist_ok=True)
 
@@ -90,6 +101,24 @@ def main() -> None:
         "validation_split": args.validation_split,
         "seed": args.seed,
         "class_names": class_names,
+        "data_dir": str(args.data_dir),
+        "training_image_counts": count_images_by_class(args.data_dir / "Training"),
+        "testing_image_counts": count_images_by_class(args.data_dir / "Testing"),
+        "environment": {
+            "python": sys.version.split()[0],
+            "platform": platform.platform(),
+            "tensorflow": tf.__version__,
+            "numpy": np.__version__,
+            "scikit_learn": sklearn.__version__,
+        },
+        "callbacks": {
+            "early_stopping_monitor": "val_loss",
+            "early_stopping_patience": 3,
+            "restore_best_weights": True,
+            "reduce_lr_monitor": "val_loss",
+            "reduce_lr_patience": 2,
+        },
+        "deterministic_ops_requested": True,
     }
     (args.output_dir / "training_config.json").write_text(
         json.dumps(config, indent=2), encoding="utf-8"
