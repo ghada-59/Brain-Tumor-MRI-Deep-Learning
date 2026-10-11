@@ -39,3 +39,15 @@ def test_no_duplicates_returns_empty_groups(tmp_path: Path) -> None:
 
     result = find_exact_duplicates({"train": [first], "test": [second]})
     assert result == {"identical_files": [], "identical_decoded_pixels": []}
+
+
+
+def test_finds_byte_identical_image_copied_between_splits(tmp_path: Path) -> None:
+    first = tmp_path / "training.png"
+    second = tmp_path / "testing.png"
+    Image.new("RGB", (10, 10), color=(15, 25, 35)).save(first, format="PNG")
+    second.write_bytes(first.read_bytes())
+
+    result = find_exact_duplicates({"train": [first], "test": [second]})
+    assert len(result["identical_files"]) == 1
+    assert len(result["identical_decoded_pixels"]) == 1
