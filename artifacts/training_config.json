@@ -6,7 +6,7 @@
   ],
   "batch_size": 32,
   "requested_epochs": 10,
-  "actual_epochs": 5,
+  "actual_epochs": 10,
   "weights": "imagenet",
   "validation_split": 0.15,
   "seed": 42,
