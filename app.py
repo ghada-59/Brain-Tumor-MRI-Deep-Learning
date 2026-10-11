@@ -12,6 +12,8 @@ import streamlit as st
 import tensorflow as tf
 from PIL import Image, UnidentifiedImageError
 
+from src.brain_tumor_dl.inference import preprocess_pil_image
+
 ROOT = Path(__file__).resolve().parent
 MODEL_PATH = ROOT / "artifacts" / "brain_tumor_mobilenetv2.keras"
 CLASSES_PATH = ROOT / "artifacts" / "class_names.json"
@@ -251,8 +253,7 @@ with right:
 
             if run_prediction:
                 try:
-                    resized = image.resize((IMAGE_SIZE, IMAGE_SIZE))
-                    batch = np.asarray(resized, dtype=np.float32)[None, ...]
+                    batch = preprocess_pil_image(image, IMAGE_SIZE)
 
                     with st.spinner("Running model inference..."):
                         probabilities = np.asarray(
