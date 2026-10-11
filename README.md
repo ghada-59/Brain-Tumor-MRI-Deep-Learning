@@ -1,6 +1,8 @@
 # Brain Tumor MRI Classification — Deep Learning Practice Project
 
-An educational biomedical-imaging portfolio project for four-class brain MRI image classification using TensorFlow/Keras and MobileNetV2 transfer learning. It includes a stratified data split, training/evaluation scripts, saved aggregate metrics, plots, CLI inference, tests, and a Streamlit demonstration.
+An educational biomedical-imaging portfolio project for four-class brain MRI image classification using TensorFlow/Keras and MobileNetV2 transfer learning. It includes a stratified data split, training/evaluation scripts, saved aggregate metrics, plots, CLI inference, automated tests, and a Streamlit demonstration.
+
+![Tests](https://github.com/ghada-59/Brain-Tumor-MRI-Deep-Learning/actions/workflows/tests.yml/badge.svg)
 
 > **Safety and scope:** this is a learning project, not a medical device. It must not be used to diagnose or exclude a brain tumour or guide treatment. The model is not clinically validated, and its scores are not calibrated clinical confidence.
 
@@ -117,6 +119,5 @@ The Streamlit demo expects local trained model files in `artifacts/`. Its output
 - The separate `Testing/` folder is reserved for held-out evaluation.
 - Accuracy alone is insufficient; inspect macro F1, per-class recall, and the confusion matrix.
 - Performance on this dataset does not establish generalization to other hospitals, scanners, protocols, or patient populations.
-- Dataset provenance, label quality, patient-level separation, and licensing must be checked before making stronger claims.
-- Possible duplicate images, patient-level separation, label quality, and dataset licensing should be checked before stronger claims.
+- Dataset provenance, possible duplicate images, label quality, patient-level separation, and licensing must be checked before making stronger claims.
 - This project does not include external validation, calibration, clinical review, DICOM/3D processing, or tumour segmentation.
