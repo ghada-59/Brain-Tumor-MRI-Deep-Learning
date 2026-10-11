@@ -9,6 +9,8 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image, UnidentifiedImageError
 
+from src.brain_tumor_dl.inference import preprocess_pil_image
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Predict a class for one MRI image.")
@@ -24,13 +26,13 @@ def main() -> None:
         raise SystemExit(f"Image not found: {args.image}")
 
     try:
-        image = Image.open(args.image).convert("RGB").resize((args.image_size, args.image_size))
+        image = Image.open(args.image).convert("RGB")
     except (UnidentifiedImageError, OSError) as exc:
         raise SystemExit(f"Cannot read image file: {exc}") from exc
 
     model = tf.keras.models.load_model(args.model)
     class_names = json.loads(args.classes.read_text(encoding="utf-8"))
-    pixels = np.asarray(image, dtype=np.float32)[None, ...]
+    pixels = preprocess_pil_image(image, args.image_size)
     probabilities = model.predict(pixels, verbose=0)[0]
     ranked = np.argsort(probabilities)[::-1]
 
