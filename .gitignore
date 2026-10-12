@@ -32,3 +32,20 @@ Thumbs.db
 
 # TensorFlow logs
 logs/
+
+
+
+# Additional local datasets and experiment artifacts
+data_leakage_free/
+artifacts_clean/
+artifacts_finetune/
+
+# Publish selected aggregate fine-tuning reports only
+reports_clean/
+reports_finetune/*
+!reports_finetune/class_metrics.png
+!reports_finetune/confusion_matrix.png
+!reports_finetune/training_curves_combined.png
+!reports_finetune/classification_report.csv
+!reports_finetune/training_history.csv
+!reports_finetune/training_history_finetune.csv

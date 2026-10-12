@@ -3,15 +3,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import platform
-import sys
 from pathlib import Path
 
-import numpy as np
-import sklearn
 import tensorflow as tf
 
-from src.brain_tumor_dl.data import count_images_by_class, load_datasets
+from src.brain_tumor_dl.data import load_datasets
 from src.brain_tumor_dl.evaluation import evaluate_and_visualize, save_training_curves
 from src.brain_tumor_dl.model import build_model
 
@@ -27,21 +23,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--validation-split", type=float, default=0.15)
     parser.add_argument("--weights", choices=["imagenet", "none"], default="imagenet", help="Use pretrained ImageNet weights, or train from random initialization.")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--fine-tune-layers",
+        type=int,
+        default=0,
+        help="Number of last MobileNetV2 layers to unfreeze; 0 disables fine-tuning.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    if args.epochs < 1 or args.batch_size < 1 or args.image_size < 1:
-        raise SystemExit("--epochs, --batch-size, and --image-size must be positive integers.")
-    if not 0.0 < args.validation_split < 1.0:
-        raise SystemExit("--validation-split must be strictly between 0 and 1.")
+    if args.epochs < 1 or args.batch_size < 1:
+        raise SystemExit("--epochs and --batch-size must be positive integers.")
     tf.keras.utils.set_random_seed(args.seed)
-    try:
-        tf.config.experimental.enable_op_determinism()
-    except (AttributeError, RuntimeError):
-        # Some devices/ops do not support deterministic execution.
-        pass
     args.output_dir.mkdir(parents=True, exist_ok=True)
     args.reports_dir.mkdir(parents=True, exist_ok=True)
 
@@ -86,6 +81,81 @@ def main() -> None:
         callbacks=callbacks,
     )
 
+    if args.fine_tune_layers > 0:
+        backbone = next(
+    (
+        layer
+        for layer in model.layers
+        if isinstance(layer, tf.keras.Model)
+        and layer.name.startswith("mobilenetv2")
+    ),
+    None,
+        )
+
+        if backbone is None:
+            raise SystemExit("Could not find the MobileNetV2 backbone in the model.")
+
+        if args.fine_tune_layers >= len(backbone.layers):
+            raise SystemExit(
+                "--fine-tune-layers must be smaller than the number of backbone layers."
+            )
+
+        backbone.trainable = True
+
+        for layer in backbone.layers:
+            layer.trainable = False
+
+        for layer in backbone.layers[-args.fine_tune_layers:]:
+            if not isinstance(layer, tf.keras.layers.BatchNormalization):
+                layer.trainable = True
+
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5),
+            loss="sparse_categorical_crossentropy",
+            metrics=["accuracy"],
+        )
+
+        fine_tune_callbacks = [
+            tf.keras.callbacks.EarlyStopping(
+                monitor="val_loss",
+                patience=3,
+                restore_best_weights=True,
+                verbose=1,
+            ),
+            tf.keras.callbacks.ReduceLROnPlateau(
+                monitor="val_loss",
+                factor=0.3,
+                patience=2,
+                min_lr=1e-7,
+                verbose=1,
+            ),
+            tf.keras.callbacks.ModelCheckpoint(
+                filepath=str(args.output_dir / "best_model_finetune.keras"),
+                monitor="val_loss",
+                save_best_only=True,
+                verbose=1,
+            ),
+            tf.keras.callbacks.CSVLogger(
+                str(args.reports_dir / "training_history_finetune.csv")
+            ),
+        ]
+
+        print(
+            f"Fine-tuning the last {args.fine_tune_layers} "
+            "backbone layers."
+        )
+
+        model.fit(
+            train_ds,
+            validation_data=val_ds,
+            epochs=args.epochs,
+            callbacks=fine_tune_callbacks,
+        )
+
+        model = tf.keras.models.load_model(
+            args.output_dir / "best_model_finetune.keras"
+        )
+
     model_path = args.output_dir / "brain_tumor_mobilenetv2.keras"
     model.save(model_path)
     (args.output_dir / "class_names.json").write_text(
@@ -101,24 +171,6 @@ def main() -> None:
         "validation_split": args.validation_split,
         "seed": args.seed,
         "class_names": class_names,
-        "data_dir": str(args.data_dir),
-        "training_image_counts": count_images_by_class(args.data_dir / "Training"),
-        "testing_image_counts": count_images_by_class(args.data_dir / "Testing"),
-        "environment": {
-            "python": sys.version.split()[0],
-            "platform": platform.platform(),
-            "tensorflow": tf.__version__,
-            "numpy": np.__version__,
-            "scikit_learn": sklearn.__version__,
-        },
-        "callbacks": {
-            "early_stopping_monitor": "val_loss",
-            "early_stopping_patience": 3,
-            "restore_best_weights": True,
-            "reduce_lr_monitor": "val_loss",
-            "reduce_lr_patience": 2,
-        },
-        "deterministic_ops_requested": True,
     }
     (args.output_dir / "training_config.json").write_text(
         json.dumps(config, indent=2), encoding="utf-8"
