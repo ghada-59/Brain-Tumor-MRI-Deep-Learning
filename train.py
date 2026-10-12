@@ -23,6 +23,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--validation-split", type=float, default=0.15)
     parser.add_argument("--weights", choices=["imagenet", "none"], default="imagenet", help="Use pretrained ImageNet weights, or train from random initialization.")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--fine-tune-layers",
+        type=int,
+        default=0,
+        help="Number of last MobileNetV2 layers to unfreeze; 0 disables fine-tuning.",
+    )
     return parser.parse_args()
 
 
@@ -74,6 +80,81 @@ def main() -> None:
         epochs=args.epochs,
         callbacks=callbacks,
     )
+
+    if args.fine_tune_layers > 0:
+        backbone = next(
+    (
+        layer
+        for layer in model.layers
+        if isinstance(layer, tf.keras.Model)
+        and layer.name.startswith("mobilenetv2")
+    ),
+    None,
+        )
+
+        if backbone is None:
+            raise SystemExit("Could not find the MobileNetV2 backbone in the model.")
+
+        if args.fine_tune_layers >= len(backbone.layers):
+            raise SystemExit(
+                "--fine-tune-layers must be smaller than the number of backbone layers."
+            )
+
+        backbone.trainable = True
+
+        for layer in backbone.layers:
+            layer.trainable = False
+
+        for layer in backbone.layers[-args.fine_tune_layers:]:
+            if not isinstance(layer, tf.keras.layers.BatchNormalization):
+                layer.trainable = True
+
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5),
+            loss="sparse_categorical_crossentropy",
+            metrics=["accuracy"],
+        )
+
+        fine_tune_callbacks = [
+            tf.keras.callbacks.EarlyStopping(
+                monitor="val_loss",
+                patience=3,
+                restore_best_weights=True,
+                verbose=1,
+            ),
+            tf.keras.callbacks.ReduceLROnPlateau(
+                monitor="val_loss",
+                factor=0.3,
+                patience=2,
+                min_lr=1e-7,
+                verbose=1,
+            ),
+            tf.keras.callbacks.ModelCheckpoint(
+                filepath=str(args.output_dir / "best_model_finetune.keras"),
+                monitor="val_loss",
+                save_best_only=True,
+                verbose=1,
+            ),
+            tf.keras.callbacks.CSVLogger(
+                str(args.reports_dir / "training_history_finetune.csv")
+            ),
+        ]
+
+        print(
+            f"Fine-tuning the last {args.fine_tune_layers} "
+            "backbone layers."
+        )
+
+        model.fit(
+            train_ds,
+            validation_data=val_ds,
+            epochs=args.epochs,
+            callbacks=fine_tune_callbacks,
+        )
+
+        model = tf.keras.models.load_model(
+            args.output_dir / "best_model_finetune.keras"
+        )
 
     model_path = args.output_dir / "brain_tumor_mobilenetv2.keras"
     model.save(model_path)

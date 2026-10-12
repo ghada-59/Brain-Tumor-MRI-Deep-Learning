@@ -94,11 +94,33 @@ python -m streamlit run app.py
 
 The Streamlit demo expects local trained model files in `artifacts/`. Its output is a model prediction for an input image, not a clinical conclusion.
 
-## Evaluation and limitations
+## Results — Corrected Dataset Split
 
-- Training/validation splitting is performed independently per class with a fixed random seed.
-- The separate `Testing/` folder is reserved for held-out evaluation.
-- Accuracy alone is insufficient; inspect macro F1, per-class recall, and the confusion matrix.
-- Performance on this dataset does not establish generalization to other hospitals, scanners, protocols, or patient populations.
-- Dataset provenance, label quality, patient-level separation, and licensing must be checked before making stronger claims.
-- No current performance claim is made here: the tracked metrics were generated before the corrected split and must be regenerated before being reported as current results.
+Two experiments were evaluated on the same held-out test set of 1,578 images from the deduplicated dataset. Exact duplicate-image auditing was performed, but patient-level independence could not be established.
+
+| Metric | Baseline | Fine-tuned |
+|---|---:|---:|
+| Test accuracy | 80.67% | **85.93%** |
+| Macro-F1 | 79.61% | **85.40%** |
+| Weighted-F1 | 79.66% | **85.45%** |
+
+The fine-tuned model improved test accuracy by 5.26 percentage points and macro-F1 by 5.79 percentage points compared with the baseline.
+
+### Fine-tuned model — Per-class performance
+
+| Class | Precision | Recall | F1-score | Test images |
+|---|---:|---:|---:|---:|
+| Glioma | 95.62% | 74.35% | 83.65% | 382 |
+| Meningioma | 83.23% | 70.20% | 76.16% | 396 |
+| No tumor | 84.47% | 99.25% | 91.26% | 400 |
+| Pituitary | 83.23% | 99.25% | 90.54% | 400 |
+
+### Evaluation protocol and limitations
+
+- The training data was deduplicated using exact-image checks. This does not guarantee that images from the same patient are separated across training and test sets.
+- The test set contains 1,578 images and is used for held-out evaluation. Repeatedly tuning the model against test results can lead to optimistic estimates.
+- Performance is uneven across classes. In particular, the fine-tuned model's recall for meningioma is 70.20%, so some meningioma images are missed.
+- Results on this dataset do not establish generalization to other hospitals, scanners, imaging protocols, or patient populations.
+- Dataset provenance, label quality, licensing, and patient-level separation require further verification.
+- These results are for an educational portfolio project. The model is not clinically validated, is not a medical device, and must not be used to diagnose or exclude tumors or guide treatment.
+- The separate 40-image prediction grid is illustrative only and is not a substitute for the complete test-set evaluation.
