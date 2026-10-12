@@ -190,7 +190,7 @@ Aggregate reports for the fine-tuned run are available in `reports_finetune/`, i
 After training, use the model saved in the artifact directory you want to demonstrate. For example, for the fine-tuned experiment:
 
 ```powershell
-python predict.py "D:\path\to\an\MRI-image.jpg" --model artifacts_finetune/brain_tumor_mobilenetv2.keras
+python predict.py "D:\path\to\an\MRI-image.jpg" --model artifacts_finetune/brain_tumor_mobilenetv2.keras --classes artifacts_finetune/class_names.json
 python -m streamlit run app.py
 ```
 
