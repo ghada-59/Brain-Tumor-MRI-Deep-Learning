@@ -194,4 +194,4 @@ python predict.py "D:\path\to\an\MRI-image.jpg" --model artifacts_finetune/brain
 python -m streamlit run app.py
 ```
 
-The CLI's available arguments can be checked with `python predict.py --help`. The Streamlit demo expects its model at the path configured by the app; if it defaults to `artifacts/`, copy the chosen model there locally or adjust the app's model-path setting. Predictions are model outputs for educational demonstration, not clinical conclusions.
+The CLI's available arguments can be checked with `python predict.py --help`. The Streamlit app currently reads `artifacts/brain_tumor_mobilenetv2.keras` and `artifacts/class_names.json`; to demonstrate the fine-tuned model in Streamlit, copy both corresponding files from `artifacts_finetune/` into `artifacts/` (or update the two paths in `app.py`). Predictions are model outputs for educational demonstration, not clinical conclusions.
