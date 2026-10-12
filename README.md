@@ -6,6 +6,8 @@ An educational biomedical-imaging portfolio project for four-class brain MRI ima
 
 > **Safety and scope:** this is a learning project, not a medical device. It must not be used to diagnose or exclude a brain tumour or guide treatment. The model is not clinically validated, and its scores are not calibrated clinical confidence.
 
+> **Branch note:** the reproducible fine-tuning experiment reporting 85.93% accuracy is documented on the [`fix/stratified-validation-and-portfolio-cleanup` branch](https://github.com/ghada-59/Brain-Tumor-MRI-Deep-Learning/blob/fix/stratified-validation-and-portfolio-cleanup/README.md). That branch includes additional dataset-preparation and fine-tuning scripts which are not present on `main` yet. The results in this `main` README therefore refer only to the baseline run described below; do not use the fine-tuning command from the other branch against this branch's code.
+
 ## Task and classes
 
 The dataset classes are `glioma`, `meningioma`, `notumor` (no tumor), and `pituitary`. This is image-level classification only; it does not segment, outline, or localize a tumour and does not process DICOM series or 3D volumes.
