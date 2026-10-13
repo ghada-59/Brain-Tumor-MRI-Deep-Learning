@@ -178,8 +178,9 @@ Aggregate reports for the fine-tuned run are available in `reports_finetune/`, i
 
 - Exact duplicate-image auditing was performed and training images overlapping the held-out test set were excluded when preparing the cleaned dataset.
 - The test set contains 1,578 images and is used for held-out evaluation. Repeatedly tuning against test results can lead to optimistic estimates.
+- **Generalization gap / possible overfitting:** the recorded fine-tuning history shows higher training accuracy than validation and test accuracy, suggesting some overfitting. However, these results alone do not establish severe overfitting.
 - Performance is uneven across classes. In particular, the fine-tuned model's recall for meningioma is 70.20%, so some meningioma images are missed.
-- These checks do not guarantee that images from the same patient are separated across training and test sets.
+- **Patient-level data separation:** patient-level separation could not be verified because patient identifiers were unavailable. Potential patient-level data leakage therefore cannot be ruled out, and reported performance may be optimistic.
 - Results on this dataset do not establish generalization to other hospitals, scanners, imaging protocols, or patient populations.
 - Dataset provenance, label quality, licensing, and patient-level separation require further verification.
 - These results are for an educational portfolio project. The model is not clinically validated, is not a medical device, and must not be used to diagnose or exclude tumors or guide treatment.
