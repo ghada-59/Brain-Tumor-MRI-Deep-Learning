@@ -196,3 +196,10 @@ python -m streamlit run app.py
 ```
 
 The CLI's available arguments can be checked with `python predict.py --help`. The Streamlit app currently reads `artifacts/brain_tumor_mobilenetv2.keras` and `artifacts/class_names.json`; to demonstrate the fine-tuned model in Streamlit, copy both corresponding files from `artifacts_finetune/` into `artifacts/` (or update the two paths in `app.py`). Predictions are model outputs for educational demonstration, not clinical conclusions.
+
+
+## Visual explainability and research comparison
+
+The Streamlit app includes an optional Grad-CAM view for the MobileNetV2 classifier. It displays the input MRI, a colored heatmap, and an overlay with a rough red box around high-activation pixels. This box is an explanatory aid only; it is **not** a validated tumor localization or segmentation result.
+
+The T-PAL approach from the supplied research notebook is treated as a separate experimental comparison, not as a replacement for the existing classifier. See [the explainability and comparison notes](docs/explainability_and_tpal_comparison.md) for the goals, interpretation limits, and fair evaluation protocol. No T-PAL performance claim is made until that experiment is independently reproduced.
