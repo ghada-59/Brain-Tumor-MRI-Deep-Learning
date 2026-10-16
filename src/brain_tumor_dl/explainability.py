@@ -29,34 +29,11 @@ def compute_gradcam(
     if backbone is None:
         raise ValueError("The supplied model does not contain a MobileNetV2 backbone.")
 
-    conv_layer = next(
-        (
-            layer
-            for layer in reversed(backbone.layers)
-            if isinstance(layer, tf.keras.layers.Conv2D)
-        ),
-        None,
-    )
-    if conv_layer is None:
-        raise ValueError("No convolutional layer was found in the MobileNetV2 backbone.")
-
-    augmentation = model.get_layer("training_augmentation")
-    scaling = model.get_layer("mobilenet_scaling")
-    pooling = model.get_layer("global_average_pooling")
-    dropout = model.get_layer("dropout")
-    classifier = model.get_layer("class_probabilities")
-    feature_model = tf.keras.Model(backbone.input, conv_layer.output)
+    grad_model = tf.keras.Model(model.inputs, [backbone.output, model.output])
 
     inputs = tf.convert_to_tensor(image_batch, dtype=tf.float32)
     with tf.GradientTape() as tape:
-        augmented = augmentation(inputs, training=False)
-        scaled = scaling(augmented)
-        conv_features = feature_model(scaled, training=False)
-        tape.watch(conv_features)
-        backbone_features = backbone(scaled, training=False)
-        pooled = pooling(backbone_features)
-        dropped = dropout(pooled, training=False)
-        scores = classifier(dropped)
+        conv_features, scores = grad_model(inputs, training=False)
         if class_index < 0 or class_index >= int(scores.shape[-1]):
             raise ValueError("class_index is outside the model output range.")
         target_score = scores[:, class_index]
