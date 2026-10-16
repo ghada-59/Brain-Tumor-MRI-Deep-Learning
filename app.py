@@ -337,6 +337,49 @@ if upload is not None and result is not None and result.get("image_signature") =
         hide_index=True,
     )
 
+    st.divider()
+    st.markdown("### Visual explanation (Grad-CAM)")
+    st.write(
+        "Grad-CAM highlights image regions that influence the selected class score. "
+        "The red rectangle is an approximate box around high-activation pixels; "
+        "it is not a validated tumor boundary or an object-detection result."
+    )
+    if st.button("Generate Grad-CAM visualization", width="stretch"):
+        try:
+            from src.brain_tumor_dl.explainability import (
+                compute_gradcam,
+                make_explanation_views,
+            )
+
+            input_batch = preprocess_pil_image(image, IMAGE_SIZE)
+            selected_class = int(np.argmax(scores_array))
+            with st.spinner("Computing the visual explanation..."):
+                heatmap = compute_gradcam(model, input_batch, selected_class)
+                colored_map, overlay, box = make_explanation_views(image, heatmap)
+
+            view_cols = st.columns(3)
+            view_cols[0].image(image, caption="Original MRI", width="stretch")
+            view_cols[1].image(colored_map, caption="Grad-CAM heatmap", width="stretch")
+            view_cols[2].image(
+                overlay,
+                caption="Heatmap overlay + approximate red box",
+                width="stretch",
+            )
+            if box is None:
+                st.info("No stable high-activation region was found for a box.")
+            else:
+                st.caption(
+                    f"Approximate activation box (pixels): x1={box[0]}, y1={box[1]}, "
+                    f"x2={box[2]}, y2={box[3]}."
+                )
+            st.warning(
+                "This visualization explains model activations only. It does not "
+                "confirm that the highlighted area is a tumor and is not for clinical use."
+            )
+        except Exception as exc:
+            st.error("Could not generate the Grad-CAM visualization.")
+            st.caption(f"Technical details: {exc}")
+
 st.divider()
 st.markdown("### About this project")
 a, b, c = st.columns(3)
