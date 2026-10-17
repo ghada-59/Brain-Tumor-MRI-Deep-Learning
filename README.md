@@ -147,6 +147,22 @@ The recorded MobileNetV2 experiments reported the following aggregate results on
 | Macro-F1 | 79.61% | 85.40% |
 | Weighted-F1 | 79.66% | 85.45% |
 
+### Recorded fine-tuned model outputs
+
+These figures are the saved plots from the recorded MobileNetV2 fine-tuning run. They show class-level performance, test-set errors, and the training/validation curves; they are not evidence of tumour localization.
+
+**Per-class metrics**
+
+![Per-class precision, recall, and F1-score for the fine-tuned MobileNetV2 model](reports_finetune/class_metrics.png)
+
+**Held-out test confusion matrix**
+
+![Confusion matrix for the fine-tuned MobileNetV2 model on the held-out test folder](reports_finetune/confusion_matrix.png)
+
+**Training and validation curves**
+
+![Training and validation curves from the fine-tuned MobileNetV2 experiment](reports_finetune/training_curves_combined.png)
+
 The recorded fine-tuned recall for meningioma was 70.20%, illustrating that overall accuracy does not describe all class-specific failure modes. Potential patient-level leakage cannot be ruled out, and these results may be optimistic. Performance on this dataset does not establish generalization to other hospitals, scanners, protocols, or populations.
 
 ## T-PAL experiment
