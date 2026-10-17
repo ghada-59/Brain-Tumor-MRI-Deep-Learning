@@ -6,23 +6,33 @@ __pycache__/
 venv/
 .env
 
-# Local dataset and trained weights
+# Local datasets and trained weights
 data/*
 !data/.gitkeep
-artifacts/*.keras
-artifacts/*.h5
-artifacts/*.weights.h5
-artifacts/logs/
-!artifacts/.gitkeep
+data_leakage_free/
+artifacts_clean/
+artifacts_finetune/
+artifacts_tpal/
 *.keras
 *.h5
 *.weights.h5
 *.ckpt
 *.ckpt.*
+*.pt
 checkpoints/
 
-# Test-set-derived example images must not be published
+# Local experiment outputs
+reports_clean/
+reports_tpal/
+reports_model_comparison/
 reports/prediction_examples.png
+reports_finetune/*
+!reports_finetune/class_metrics.png
+!reports_finetune/confusion_matrix.png
+!reports_finetune/training_curves_combined.png
+!reports_finetune/classification_report.csv
+!reports_finetune/training_history.csv
+!reports_finetune/training_history_finetune.csv
 
 # Editor / OS
 .vscode/
@@ -32,20 +42,3 @@ Thumbs.db
 
 # TensorFlow logs
 logs/
-
-
-
-# Additional local datasets and experiment artifacts
-data_leakage_free/
-artifacts_clean/
-artifacts_finetune/
-
-# Publish selected aggregate fine-tuning reports only
-reports_clean/
-reports_finetune/*
-!reports_finetune/class_metrics.png
-!reports_finetune/confusion_matrix.png
-!reports_finetune/training_curves_combined.png
-!reports_finetune/classification_report.csv
-!reports_finetune/training_history.csv
-!reports_finetune/training_history_finetune.csv
