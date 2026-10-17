@@ -32,7 +32,7 @@ def main() -> None:
     except (UnidentifiedImageError, OSError) as exc:
         raise SystemExit(f"Cannot read image file: {exc}") from exc
 
-    model = tf.keras.models.load_model(model_path)
+    model = tf.keras.models.load_model(model_path, compile=False)
     class_names = json.loads(args.classes.read_text(encoding="utf-8"))
     pixels = preprocess_pil_image(image, args.image_size)
     probabilities = model.predict(pixels, verbose=0)[0]

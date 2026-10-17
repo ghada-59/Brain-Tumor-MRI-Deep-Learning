@@ -171,7 +171,7 @@ if not MODEL_PATH.is_file() or not CLASSES_PATH.is_file():
 
 @st.cache_resource
 def load_classifier(model_path: str) -> tf.keras.Model:
-    return tf.keras.models.load_model(model_path)
+    return tf.keras.models.load_model(model_path, compile=False)
 
 
 try:

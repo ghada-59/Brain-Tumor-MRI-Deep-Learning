@@ -42,3 +42,16 @@ Thumbs.db
 
 # TensorFlow logs
 logs/
+
+
+# Local backups and temporary files
+*.bak
+*.backup
+*.patch
+
+# Grad-CAM outputs and local diagnostics
+artifacts/gradcam_checks/
+artifacts/gradcam_testing/
+check_model_loading.py
+gradcam_test_heatmap.png
+gradcam_test_overlay.png

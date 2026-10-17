@@ -1,7 +1,8 @@
+
 from src.brain_tumor_dl.model_paths import resolve_mobilenet_path
 
 
-def test_resolver_prefers_canonical_model(tmp_path):
+def test_resolver_prefers_repaired_model_when_both_exist(tmp_path):
     artifacts = tmp_path / "artifacts"
     artifacts.mkdir()
     canonical = artifacts / "brain_tumor_mobilenetv2.keras"
@@ -9,7 +10,7 @@ def test_resolver_prefers_canonical_model(tmp_path):
     canonical.write_bytes(b"canonical")
     repaired.write_bytes(b"repaired")
 
-    assert resolve_mobilenet_path(tmp_path) == canonical
+    assert resolve_mobilenet_path(tmp_path) == repaired
 
 
 def test_resolver_uses_repaired_model_when_canonical_is_missing(tmp_path):
@@ -19,6 +20,15 @@ def test_resolver_uses_repaired_model_when_canonical_is_missing(tmp_path):
     repaired.write_bytes(b"repaired")
 
     assert resolve_mobilenet_path(tmp_path) == repaired
+
+
+def test_resolver_uses_canonical_model_when_repaired_is_missing(tmp_path):
+    artifacts = tmp_path / "artifacts"
+    artifacts.mkdir()
+    canonical = artifacts / "brain_tumor_mobilenetv2.keras"
+    canonical.write_bytes(b"canonical")
+
+    assert resolve_mobilenet_path(tmp_path) == canonical
 
 
 def test_resolver_returns_canonical_expected_path_when_no_model_exists(tmp_path):
