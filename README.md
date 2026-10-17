@@ -189,6 +189,16 @@ After training MobileNetV2, run a single-image prediction:
 python predict.py "D:\\path\\to\\an\\MRI-image.jpg" --model artifacts_clean/brain_tumor_mobilenetv2.keras --classes artifacts_clean/class_names.json
 \`\`\`
 
+The Streamlit app and FastAPI service look in \`artifacts/\`. To use the fine-tuned checkpoint from \`artifacts_finetune/\` or the baseline from \`artifacts_clean/\`, copy the desired model and matching class list into that directory:
+
+\`\`\`powershell
+New-Item -ItemType Directory -Force artifacts | Out-Null
+Copy-Item artifacts_finetune/brain_tumor_mobilenetv2.keras artifacts/brain_tumor_mobilenetv2.keras
+Copy-Item artifacts_finetune/class_names.json artifacts/class_names.json
+\`\`\`
+
+Choose \`artifacts_clean/\` instead of \`artifacts_finetune/\` in those two copy commands if you want the baseline. The shared path resolver prefers the canonical \`brain_tumor_mobilenetv2.keras\`; if that file is absent, it can use a locally repaired \`brain_tumor_mobilenetv2_repaired.keras\` artifact. Trained weights are not included in GitHub.
+
 Launch Streamlit:
 
 \`\`\`powershell
@@ -201,7 +211,7 @@ Launch the optional FastAPI service:
 python -m uvicorn api:app --host 127.0.0.1 --port 8000
 \`\`\`
 
-Open \`http://127.0.0.1:8000/docs\` to explore the API. The API expects \`artifacts/brain_tumor_mobilenetv2.keras\` and \`artifacts/class_names.json\`; model weights are not included in the repository, so train the model and place the intended checkpoint in the documented location before using inference.
+Open \`http://127.0.0.1:8000/docs\` to explore the API. The API and Streamlit interface require a model file and matching \`class_names.json\` in \`artifacts/\`.
 
 ## Responsible interpretation
 
