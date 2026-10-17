@@ -207,14 +207,15 @@ def association_regularization(
         ).square().sum(dim=-1).mean()
 
         head_count = attention.shape[1]
+        layer_diversity = prior.new_zeros(())
         pair_count = 0
         for first in range(head_count):
             for second in range(first + 1, head_count):
                 overlap = attention[:, first].float() @ attention[:, second].float().transpose(-1, -2)
-                diversity_loss = diversity_loss + overlap.square().sum(dim=(-1, -2)).mean()
+                layer_diversity = layer_diversity + overlap.square().sum(dim=(-1, -2)).mean()
                 pair_count += 1
         if pair_count:
-            diversity_loss = diversity_loss / pair_count
+            diversity_loss = diversity_loss + layer_diversity / pair_count
 
     layer_count = max(1, len(attentions))
     return association_loss / layer_count, diversity_loss / layer_count
