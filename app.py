@@ -13,9 +13,10 @@ import tensorflow as tf
 from PIL import Image, UnidentifiedImageError
 
 from src.brain_tumor_dl.inference import preprocess_pil_image
+from src.brain_tumor_dl.model_paths import resolve_mobilenet_path
 
 ROOT = Path(__file__).resolve().parent
-MODEL_PATH = ROOT / "artifacts" / "brain_tumor_mobilenetv2.keras"
+MODEL_PATH = resolve_mobilenet_path(ROOT)
 CLASSES_PATH = ROOT / "artifacts" / "class_names.json"
 IMAGE_SIZE = 224
 
