@@ -58,7 +58,7 @@ The red box is a rough visualization derived from model activation. It is not a 
 - `train_tpal.py` — T-PAL training and held-out evaluation.
 - `explain_tpal.py` — export a T-PAL explanation for one image.
 - `compare_model_reports.py` — combine recorded metrics into a comparison CSV.
-- `prepare_clean_dataset.py`, `audit_clean_dataset.py`, `audit_dataset.py` — dataset preparation and exact-duplicate audits.
+- `prepare_clean_dataset.py`, `audit_dataset.py` — dataset preparation and exact-duplicate audits.
 - `tests/` — automated tests; T-PAL unit tests run when PyTorch is installed.
 - `.github/workflows/tests.yml` — GitHub Actions test workflow.
 
@@ -92,8 +92,8 @@ Create the deduplicated copy used by the recorded MobileNetV2 experiment:
 
 ```powershell
 python prepare_clean_dataset.py
-python check_clean_dataset.py
-python audit_clean_dataset.py
+python check_dataset.py --data-dir data_leakage_free
+python audit_dataset.py --data-dir data_leakage_free --validation-split 0.15 --seed 42
 ```
 
 The preparation script creates `data_leakage_free/` and does not modify the original `data/` folder. It refuses to overwrite an existing output folder. Inspect an existing output folder rather than deleting it blindly.
