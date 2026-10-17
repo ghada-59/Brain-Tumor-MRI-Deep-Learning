@@ -1,39 +1,39 @@
-# MRI explainability and model comparison
+# Explainability and T-PAL comparison
 
-## Why add visual explanations?
+## Task definition
 
-The main model in this repository performs image-level classification into four dataset classes: glioma, meningioma, no tumor, and pituitary. Classification predicts a label for the whole image; it does not provide a verified tumor location.
+Both model paths classify a complete MRI image into one of four dataset classes: glioma, meningioma, notumor, or pituitary. They do not directly perform tumour segmentation or validated object detection.
 
-Grad-CAM provides a visual explanation of the trained MobileNetV2 classifier by highlighting regions that contribute to a selected class score. The Streamlit application displays the original image, a colored activation map, and an overlay. A red rectangle is drawn around a high-activation region as a **rough visualization aid**.
+## MobileNetV2 explanations
 
-The red rectangle is not ground truth, a tumor segmentation, or a validated object-detection prediction. A high-activation region may reflect anatomy, artifacts, image borders, or other patterns learned by the classifier. It must not be interpreted as a confirmed tumor boundary.
+Grad-CAM uses gradients of a selected class score to highlight spatial activations in the convolutional network. The Streamlit interface displays the input, a heatmap, and an approximate box around high-activation pixels.
 
-## Purpose of comparing MobileNetV2 and T-PAL
+## T-PAL-style architecture
 
-The supplied T-PAL notebook describes a second, experimental approach: a compact convolutional stem followed by transformer-style pixel-association blocks. Its goal is still four-class MRI classification, while also examining learned associations between image patches.
+The separate PyTorch implementation in \`src/brain_tumor_dl/tpal.py\` contains a convolutional stem, spatial positional embeddings, multi-head pixel association, a Gaussian spatial prior, gated residual updates, and a classification head. Optional association and diversity regularizers can be enabled during training. Auxiliary attention matrices are exposed for analysis.
 
-The comparison is useful for two different questions:
+The implementation is inspired by the supplied notebook; it should not be described as an exact reproduction until differences in data splitting, preprocessing, training, and evaluation have been reconciled.
 
-- **Classification:** which approach performs better on the same held-out test set, using the same class definitions and data split?
-- **Explainability:** what patterns do Grad-CAM and T-PAL's attention/association maps highlight, and are those patterns stable and relevant?
+## T-PAL explanation views
 
-These are not interchangeable visualizations. Grad-CAM summarizes gradients with respect to a class score. T-PAL attention/association maps show relationships between spatial tokens inside that model. Neither is automatically a tumor segmentation mask.
+\`explain_tpal.py\` exports three panels: original MRI, a blue map combining input-gradient saliency with attention rollout, and an overlay with a red threshold-derived activation box. These views explain model behavior only. Neither attention nor saliency is a validated tumour mask, and the red box is not produced by a trained detector.
 
-## Fair experimental protocol
+## Evaluation protocol
 
-1. Use the same deduplicated data and fixed train/validation/test split for both approaches.
-2. Keep the test set untouched during model selection.
-3. Record the exact preprocessing, seed, training configuration, and model checkpoint for each approach.
-4. Report per-class precision, recall and F1, macro-F1, confusion matrix, and one-vs-rest ROC-AUC when appropriate.
-5. Generate explanation examples from the same held-out images, including correct and incorrect predictions.
-6. Do not publish a claimed T-PAL accuracy until the implementation has been run and its outputs reproduced locally.
+1. Prepare one cleaned dataset and document the exact train/validation/test file lists.
+2. Use the same held-out test images and labels for both model families.
+3. Keep test data out of model selection and hyperparameter tuning.
+4. Report accuracy, balanced accuracy, macro-F1, weighted-F1, per-class precision/recall/F1, and the confusion matrix.
+5. Save configuration, seed, preprocessing statistics, and selected checkpoint metadata.
+6. Inspect both correct and incorrect predictions; do not select examples only because they look persuasive.
+7. Report compute time and inference latency only when measured using a documented procedure.
 
-The supplied PDF includes a T-PAL implementation and reported experimental outputs, but these numbers should not be treated as results from this repository. The repository's current deployed classifier remains MobileNetV2 until the T-PAL experiment is independently implemented, run, and checked.
+The T-PAL paper/notebook's reported score is not a result of this repository. The repository does not claim a T-PAL score until a local run has completed and its artifacts have been reviewed. A matching number of test images is not proof that two models used the same examples.
 
-## Current status
+## Limitations
 
-- MobileNetV2: existing classification model.
-- Grad-CAM: implemented as an optional Streamlit visualization.
-- Red activation box: approximate threshold-based box derived from the Grad-CAM map; not a detector.
-- T-PAL: comparison target requiring its own reproducible implementation and training run.
-- Clinical use: not intended; neither model nor visual explanation is clinically validated.
+- Dataset labels and provenance may contain errors.
+- Exact duplicate audits cannot prove patient-level independence.
+- Domain shift across hospitals, scanners, sequences, and populations is not assessed.
+- The dataset is not a substitute for clinical data or external validation.
+- Neither model nor visualization is intended for diagnosis or treatment decisions.

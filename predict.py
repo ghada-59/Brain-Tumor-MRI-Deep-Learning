@@ -10,17 +10,19 @@ import tensorflow as tf
 from PIL import Image, UnidentifiedImageError
 
 from src.brain_tumor_dl.inference import preprocess_pil_image
+from src.brain_tumor_dl.model_paths import resolve_mobilenet_path
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Predict a class for one MRI image.")
     parser.add_argument("image", type=Path, help="Path to an MRI image file (JPG/PNG).")
-    parser.add_argument("--model", type=Path, default=Path("artifacts/brain_tumor_mobilenetv2.keras"))
+    parser.add_argument("--model", type=Path, default=None)
     parser.add_argument("--classes", type=Path, default=Path("artifacts/class_names.json"))
     parser.add_argument("--image-size", type=int, default=224)
     args = parser.parse_args()
 
-    if not args.model.is_file() or not args.classes.is_file():
+    model_path = args.model if args.model is not None else resolve_mobilenet_path(Path.cwd())
+    if not model_path.is_file() or not args.classes.is_file():
         raise SystemExit("Trained model or class_names.json not found. Run train.py first.")
     if not args.image.is_file():
         raise SystemExit(f"Image not found: {args.image}")
@@ -30,7 +32,7 @@ def main() -> None:
     except (UnidentifiedImageError, OSError) as exc:
         raise SystemExit(f"Cannot read image file: {exc}") from exc
 
-    model = tf.keras.models.load_model(args.model)
+    model = tf.keras.models.load_model(model_path)
     class_names = json.loads(args.classes.read_text(encoding="utf-8"))
     pixels = preprocess_pil_image(image, args.image_size)
     probabilities = model.predict(pixels, verbose=0)[0]
