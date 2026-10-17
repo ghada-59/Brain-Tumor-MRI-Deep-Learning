@@ -1,0 +1,3 @@
+# Optional dependencies for the separate PyTorch T-PAL experiment.
+# Install after the base environment: python -m pip install -r requirements-tpal.txt
+torch>=2.2,<3
