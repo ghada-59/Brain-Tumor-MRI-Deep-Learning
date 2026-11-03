@@ -1,241 +1,251 @@
-# Brain Tumor MRI Classification — Deep Learning
+# Brain Tumor MRI Classification with Explainable Deep Learning
 
-An educational biomedical-imaging project for four-class brain MRI classification. It keeps a TensorFlow/Keras MobileNetV2 baseline and adds a separate PyTorch implementation inspired by **T-PAL (Trainable Transformer-Based Pixel Association Learning)** from the supplied research notebook.
+A four-class brain MRI classifier (**glioma · meningioma · no tumor · pituitary**) built on MobileNetV2 transfer learning, with genuine **Grad-CAM** explanations, a leakage-controlled evaluation, a FastAPI inference service and a React dashboard.
 
-This repository is for learning and portfolio demonstration. It is not a medical device and must not be used to diagnose or exclude a brain tumour or guide treatment. Neither classifier nor its visual explanations is clinically validated.
+> **Educational / research portfolio project. Not a medical device and not clinically validated.** Predictions must never be used to diagnose or exclude a brain tumour or to guide treatment. See [Limitations](#limitations-and-ethical-considerations).
 
-## Research question
+![Dashboard overview](docs/images/dashboard_overview.png)
 
-Can a compact pixel-association Transformer provide a useful comparison with a MobileNetV2 transfer-learning classifier for image-level classification into these dataset labels?
+## Verified results at a glance
 
-- `glioma`
-- `meningioma`
-- `notumor` (no tumor)
-- `pituitary`
+| Metric (held-out `Testing/` folder) | Result |
+|---|---:|
+| Test accuracy | **83.46 %** |
+| Macro F1-score | **82.85 %** |
+| Weighted F1-score | 82.94 % |
+| Test images | 1,578 |
 
-Classification predicts a label for the whole image. It does not by itself segment a tumour or establish its location.
+These values were checked against the saved experiment record (`frontend/src/data/results.json`, derived from the experiment record of checkpoint SHA-256 `8b7b4c2e…d6f63f`) and match the previously reported 83.46 % / 82.85 % / 1,578. They come from **one training run with one seed**, on an image-level (not patient-level) split; see the limitations below before reading anything into them.
 
-## Model approaches
+## Problem and objectives
 
-### MobileNetV2 (TensorFlow/Keras)
+Brain MRI slices are routinely sorted into tumour types; an automated classifier is a common teaching problem in biomedical image analysis. This project asks a deliberately modest question: *how well does a compact, fine-tuned MobileNetV2 separate four dataset labels, once obvious data leakage is controlled, and what does it look at when it decides?*
 
-The existing transfer-learning pipeline includes class-stratified train/validation splitting, a held-out `Testing/` folder, optional fine-tuning, aggregate evaluation reports, CLI inference, a Streamlit demonstration, and Grad-CAM visualization.
+Objectives:
 
-### T-PAL-style pixel-association Transformer (PyTorch)
+1. Train and evaluate a four-class image-level classifier.
+2. Audit the dataset for duplicate/near-duplicate leakage and retrain on a leakage-controlled copy.
+3. Explain predictions with Grad-CAM, and be explicit about what such maps do and do not show.
+4. Serve the model through a validated API and present results in a dashboard that reads only genuine result files.
 
-The experimental path is separate from MobileNetV2:
+## Main features
 
-- A compact convolutional stem maps a grayscale MRI to a spatial token grid.
-- Learnable multi-head attention estimates relationships between tokens.
-- A Gaussian spatial prior is combined with learned attention.
-- A gated residual update and feed-forward block refine token features.
-- The pooled representation is classified into the four dataset classes.
-- Optional association and attention-diversity penalties are available during training.
+- MobileNetV2 (ImageNet weights) with a frozen-backbone phase followed by fine-tuning of the last 30 layers.
+- Perceptual-hash near-duplicate audit; 338 training images that matched test images were excluded, and a group-aware train/validation split was used.
+- Class weights computed from the training partition only; checkpoint chosen by validation macro-F1.
+- Grad-CAM figure generated from the evaluated checkpoint, with image hashes and scores recorded per example.
+- FastAPI service with strict upload validation, model-identity reporting (SHA-256) and non-leaky error messages.
+- React/Vite dashboard: overview, methodology, evaluation, explainability, live classification, limitations, reproducibility.
 
-The implementation is inspired by the supplied T-PAL notebook and is not claimed to be an exact reproduction of the paper's experimental protocol. It preserves the existing TensorFlow model and its artifact format.
+## Dashboard
 
-## Visual explanations
+| Evaluation | Explainability |
+|---|---|
+| ![Evaluation page](docs/images/evaluation.png) | ![Explainability page](docs/images/explainability.png) |
 
-The Streamlit application provides a Grad-CAM view for MobileNetV2. The T-PAL command-line tool can export a side-by-side image containing:
+![Prediction interface running against the evaluated checkpoint](docs/images/prediction_interface.png)
 
-1. The original MRI.
-2. A blue visualization combining input-gradient saliency and attention rollout.
-3. An overlay with a red box around a thresholded high-activation region.
+*The screenshots above are captured from the running application (FastAPI + Vite) with the evaluated checkpoint loaded. The image in the prediction screenshot is a public-dataset test image used purely to demonstrate the interface; one image says nothing about accuracy.*
 
-The red box is a rough visualization derived from model activation. It is not a trained object detector, a ground-truth box, or a validated tumour boundary. Attention and saliency can highlight anatomy, artifacts, image borders, or other learned patterns; they do not prove where a tumour is located.
+Further pages: [Data & methodology](docs/images/methodology.png) · [Limitations](docs/images/limitations.png)
 
-## Repository layout
+## Results
 
-- `train.py`, `predict.py` — MobileNetV2 training and single-image inference.
-- `app.py`, `api.py` — local Streamlit interface and optional FastAPI service.
-- `src/brain_tumor_dl/model.py` — MobileNetV2 model.
-- `src/brain_tumor_dl/data.py` — MobileNetV2 dataset loading and stratified split.
-- `src/brain_tumor_dl/evaluation.py` — MobileNetV2 metrics and plots.
-- `src/brain_tumor_dl/explainability.py` — Grad-CAM visualization.
-- `src/brain_tumor_dl/tpal.py` — T-PAL-style PyTorch architecture and regularization.
-- `src/brain_tumor_dl/tpal_data.py` — grayscale dataset loading and training-only normalization statistics.
-- `src/brain_tumor_dl/tpal_explainability.py` — T-PAL saliency/attention maps and approximate activation boxes.
-- `train_tpal.py` — T-PAL training and held-out evaluation.
-- `explain_tpal.py` — export a T-PAL explanation for one image.
-- `compare_model_reports.py` — combine recorded metrics into a comparison CSV.
-- `prepare_clean_dataset.py`, `audit_dataset.py` — dataset preparation and exact-duplicate audits.
-- `tests/` — automated tests; T-PAL unit tests run when PyTorch is installed.
-- `.github/workflows/tests.yml` — GitHub Actions test workflow.
+### Per-class performance
 
-Datasets and trained model weights are intentionally not committed. Generated checkpoints and reports are written to local output folders.
+| Class | Precision | Recall | F1 | Support |
+|---|---:|---:|---:|---:|
+| Glioma | 94.59 % | 64.14 % | 76.44 % | 382 |
+| Meningioma | 72.21 % | 73.48 % | 72.84 % | 396 |
+| No tumor | 82.84 % | 97.75 % | 89.68 % | 400 |
+| Pituitary | 87.84 % | 97.50 % | 92.42 % | 400 |
 
-## Dataset setup
+![Per-class precision, recall and F1](frontend/public/results/class_metrics.png)
 
-Download the [Brain Tumor MRI Dataset on Kaggle](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset) yourself and check its current terms before use. Arrange the folders with matching class names:
+Glioma recall (64 %) is the weakest figure: the model is precise when it says "glioma" but misses many gliomas.
 
-```text
-data/
-├── Training/
-│   ├── glioma/
-│   ├── meningioma/
-│   ├── notumor/
-│   └── pituitary/
-└── Testing/
-    ├── glioma/
-    ├── meningioma/
-    ├── notumor/
-    └── pituitary/
+### Confusion matrix (rows = true label, columns = predicted)
+
+| | Glioma | Meningioma | No tumor | Pituitary |
+|---|---:|---:|---:|---:|
+| **Glioma** | 245 | 95 | 30 | 12 |
+| **Meningioma** | 12 | 291 | 51 | 42 |
+| **No tumor** | 1 | 8 | 391 | 0 |
+| **Pituitary** | 1 | 9 | 0 | 390 |
+
+![Confusion matrix](frontend/public/results/confusion_matrix.png)
+
+The dominant error is glioma predicted as meningioma (95 of 382).
+
+### Training curves
+
+![Training and validation curves](frontend/public/results/training_curves.png)
+
+Ten frozen-backbone epochs followed by five fine-tuning epochs; the checkpoint was selected on validation macro-F1.
+
+### Historical context (not the primary result)
+
+Earlier runs on a dataset copy that still contained the near-duplicate training images scored higher on the same `Testing/` folder (for example 85.93 % accuracy for a 30-layer fine-tune). The leakage-controlled result above is lower, which is the expected direction when duplicated images are removed; the earlier numbers are kept only as context, and the `Testing/` folder was consulted across those comparisons, so it is not a pristine benchmark.
+
+## Grad-CAM explainability
+
+![Grad-CAM examples: input, heatmap, overlay](frontend/public/results/gradcam_examples.png)
+
+Each row is the first test image of its class in sorted order (not hand-picked): **input MRI · Grad-CAM heatmap for the predicted class · overlay** (the red box is a threshold-derived rectangle, not a detection). Provenance (image hashes, checkpoint hash) is in [`frontend/src/data/gradcam_examples.json`](frontend/src/data/gradcam_examples.json).
+
+| Class (ground truth) | Predicted | Score of predicted class | Outcome |
+|---|---|---:|---|
+| Glioma | Meningioma | 0.547 (glioma: 0.452) | **Misclassified** |
+| Meningioma | Meningioma | 0.974 | Correct |
+| No tumor | No tumor | 1.000 | Correct |
+| Pituitary | Pituitary | 0.896 | Correct |
+
+**Reading these honestly.** Grad-CAM is an approximate attribution method. It is not a segmentation or a validated tumour localisation. In these examples the highlighted regions do **not** reliably coincide with visible lesions; for the misclassified glioma the map falls on the lower part of the head/neck region, and for the meningioma it sits beside the bright mass rather than on it. Four images say nothing about general behaviour, and scores are uncalibrated softmax outputs.
+
+## Model and workflow
+
+```
+MRI image (PNG/JPG/BMP/WEBP)
+  → decode + bilinear resize to 224×224×3, raw 0–255 pixels
+  → [in-model] MobileNetV2 preprocessing (scaling to [-1, 1])
+  → MobileNetV2 backbone (ImageNet weights; last 30 layers fine-tuned)
+  → global average pooling + dropout 0.25 + dense softmax over 4 classes
+     (random flip / small rotation / zoom augmentation during training only)
+  → scores for glioma / meningioma / notumor / pituitary
 ```
 
-Check the folder structure:
+Training configuration of the evaluated run (from the experiment record): seed 42, validation split 0.15 (group-aware), image size 224, 10 frozen epochs + 5 fine-tuning epochs, class weights from the training partition, selection metric `val_macro_f1`.
+
+## Dataset and split methodology
+
+The data are the public [Brain Tumor MRI Dataset on Kaggle](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset) (check its current terms before use). **No data are included in this repository.**
+
+| Class | Training (original) | Training (after leakage exclusion) | Testing (unchanged) |
+|---|---:|---:|---:|
+| Glioma | 1,396 | 1,396 | 382 |
+| Meningioma | 1,288 | 1,282 | 396 |
+| No tumor | 1,257 | 927 | 400 |
+| Pituitary | 1,355 | 1,353 | 400 |
+
+- A perceptual-hash audit (Hamming distance 0) found 236 connected duplicate clusters; 187 touch a test image. All **338** training members of those clusters (330 no-tumor, 6 meningioma, 2 pituitary) were excluded from training; `Testing/` was never modified. The remaining 49 training-only clusters were kept together on one side of the train/validation split.
+- The split is **not patient-level**: the dataset carries no patient identifiers.
+- Exact-duplicate and near-duplicate auditing was performed, but **residual near-duplicates (for example other slices of the same patient) may remain**.
+
+## Model weights
+
+The evaluated checkpoint **is included** (21.8 MB, below GitHub's file-size limit, regular Git, no LFS):
+
+```
+artifacts_finetune30_leakagecontrolled_20261026/brain_tumor_mobilenetv2.keras
+SHA-256 8b7b4c2e423d18d72d72bb25773b906b03c2a9a6a8cf40b060de1e56a0d6f63f
+```
+
+Verify it with `Get-FileHash <file> -Algorithm SHA256` (PowerShell). The API reports the hash of the model it serves at `/api/status` and the dashboard compares it with the evaluated hash. Set `BRAIN_TUMOR_MODEL_PATH` to serve a different checkpoint; the dashboard then states that it is *not* the evaluated one. The weights load with TensorFlow 2.19.1 / Keras 3.15.1 (other Keras versions may fail to deserialize `.keras` files; the API then reports `load_failed` instead of guessing).
+
+## Installation (Windows)
+
+Prerequisites: Python 3.11, Node.js 20+, Git.
 
 ```powershell
-python check_dataset.py
+git clone https://github.com/ghada-59/Brain-Tumor-MRI-Deep-Learning.git
+cd Brain-Tumor-MRI-Deep-Learning
+
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-react-api.txt tensorflow==2.19.1 pillow numpy
 ```
 
-Create the deduplicated copy used by the recorded MobileNetV2 experiment:
+(A conda environment with Python 3.11, TensorFlow 2.19.1 and Keras 3.15.1 works equally well.)
 
-```powershell
-python prepare_clean_dataset.py
-python check_dataset.py --data-dir data_leakage_free
-python audit_dataset.py --data-dir data_leakage_free --validation-split 0.15 --seed 42
-```
-
-The preparation script creates `data_leakage_free/` and does not modify the original `data/` folder. It refuses to overwrite an existing output folder. Inspect an existing output folder rather than deleting it blindly.
-
-Exact-duplicate checks do not detect all near-duplicates and do not prove patient-level independence. Patient identifiers are unavailable, so patient-level separation cannot be verified.
-
-## Environment setup
-
-Use Python 3.11 from Anaconda Prompt or a terminal opened at the repository root.
-
-```powershell
-conda create --prefix D:\anaconda_envs\brain-tumor-dl python=3.11 -y
-conda activate D:\anaconda_envs\brain-tumor-dl
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-The T-PAL experiment is an optional PyTorch component. Install its separate dependency file when you are ready to run it:
-
-```powershell
-python -m pip install -r requirements-tpal.txt
-```
-
-## Run automated tests
-
-```powershell
-python -m pytest -q
-```
-
-Run tests locally before treating any code change as validated. GitHub Actions provides a separate CI check; a successful CI run does not replace testing the full training workflow with your local dataset and hardware.
-
-## MobileNetV2 experiment
-
-### Baseline
-
-```powershell
-python train.py --data-dir data_leakage_free --output-dir artifacts_clean --reports-dir reports_clean --epochs 10 --batch-size 32 --image-size 224 --validation-split 0.15 --weights imagenet --seed 42
-```
-
-### Fine-tuning
-
-```powershell
-python train.py --data-dir data_leakage_free --output-dir artifacts_finetune --reports-dir reports_finetune --epochs 10 --batch-size 32 --image-size 224 --validation-split 0.15 --weights imagenet --seed 42 --fine-tune-layers 30
-```
-
-The recorded MobileNetV2 experiments reported the following aggregate results on a held-out test folder containing 1,578 images. Re-run the pipeline to reproduce the experiment in your own environment.
-
-| Metric | Baseline | Fine-tuned |
-|---|---:|---:|
-| Test accuracy | 80.67% | 85.93% |
-| Macro-F1 | 79.61% | 85.40% |
-| Weighted-F1 | 79.66% | 85.45% |
-
-### Recorded fine-tuned model outputs
-
-These figures are the saved plots from the recorded MobileNetV2 fine-tuning run. They show class-level performance, test-set errors, and the training/validation curves; they are not evidence of tumour localization.
-
-**Per-class metrics**
-
-![Per-class precision, recall, and F1-score for the fine-tuned MobileNetV2 model](reports_finetune/class_metrics.png)
-
-**Held-out test confusion matrix**
-
-![Confusion matrix for the fine-tuned MobileNetV2 model on the held-out test folder](reports_finetune/confusion_matrix.png)
-
-**Training and validation curves**
-
-![Training and validation curves from the fine-tuned MobileNetV2 experiment](reports_finetune/training_curves_combined.png)
-
-The recorded fine-tuned recall for meningioma was 70.20%, illustrating that overall accuracy does not describe all class-specific failure modes. Potential patient-level leakage cannot be ruled out, and these results may be optimistic. Performance on this dataset does not establish generalization to other hospitals, scanners, protocols, or populations.
-
-## T-PAL experiment
-
-Train a T-PAL model using the same cleaned dataset folder structure:
-
-```powershell
-python train_tpal.py --data-dir data_leakage_free --output-dir artifacts_tpal --reports-dir reports_tpal --epochs 30 --batch-size 32 --image-size 128 --validation-split 0.15 --seed 42
-```
-
-For limited memory, try `--batch-size 16`. The script selects a checkpoint using validation macro-F1, applies early stopping, and computes the final metrics once on the separate `Testing/` folder. It saves:
-
-- `artifacts_tpal/tpal_best.pt` — selected model checkpoint and preprocessing metadata.
-- `reports_tpal/test_metrics.json` — aggregate held-out metrics.
-- `reports_tpal/classification_report.json` and `per_class_metrics.csv` — class-level results.
-- `reports_tpal/confusion_matrix.png` — held-out confusion matrix.
-- `reports_tpal/training_history.csv` and `training_curves.png` — training/validation history.
-
-Export an explanation for one image after training:
-
-```powershell
-python explain_tpal.py "D:\path\to\an\MRI-image.jpg" --checkpoint artifacts_tpal/tpal_best.pt --output reports_tpal/explanations/example.png
-```
-
-The exported image includes the original input, blue saliency/attention visualization, and an approximate red activation box. These are model-explanation views, not validated tumour localization.
-
-## Compare recorded metrics
-
-```powershell
-python compare_model_reports.py --baseline artifacts_clean/test_metrics.json --finetuned artifacts_finetune/test_metrics.json --tpal reports_tpal/test_metrics.json --output reports_model_comparison/model_comparison.csv
-```
-
-The comparison utility combines existing metric files; it does not train models or prove that their test images are identical. A fair comparison requires the exact same held-out image list, labels, and preprocessing for all models. Matching test-set counts alone is insufficient. Confirm the evaluation protocol before making a performance claim.
-
-## Local inference interfaces
-
-After training MobileNetV2, run a single-image prediction:
-
-```powershell
-python predict.py "D:\path\to\an\MRI-image.jpg" --model artifacts_clean/brain_tumor_mobilenetv2.keras --classes artifacts_clean/class_names.json
-```
-
-The Streamlit app and FastAPI service look in `artifacts/`. To use a selected checkpoint, copy the model and its matching class list into that directory. For example, to copy the fine-tuned checkpoint:
-
-```powershell
-New-Item -ItemType Directory -Force artifacts | Out-Null
-Copy-Item artifacts_finetune/brain_tumor_mobilenetv2.keras artifacts/brain_tumor_mobilenetv2.keras
-Copy-Item artifacts_finetune/class_names.json artifacts/class_names.json
-```
-
-For the baseline, replace `artifacts_finetune/` in the two copy commands with `artifacts_clean/`.
-
-The shared path resolver prefers `artifacts/brain_tumor_mobilenetv2_repaired.keras` when that locally repaired file exists. Otherwise, it uses `artifacts/brain_tumor_mobilenetv2.keras` when available. If you want to use the copied canonical model, check whether the repaired artifact is present, because it takes priority. Trained weights are not included in GitHub.
-
-Launch Streamlit:
-
-```powershell
-python -m streamlit run app.py
-```
-
-Launch the optional FastAPI service:
+### Start the API
 
 ```powershell
 python -m uvicorn api:app --host 127.0.0.1 --port 8000
 ```
 
-Open `http://127.0.0.1:8000/docs` to explore the API. The API and Streamlit interface require a model file and matching `class_names.json` in `artifacts/`.
+### Start the dashboard
 
-## Responsible interpretation
+```powershell
+cd frontend
+npm install
+npm run dev        # http://127.0.0.1:5173
+```
 
-- Model scores are not calibrated clinical confidence.
-- Classification is not segmentation or object detection.
-- Saliency/attention maps are explanatory views and may not align with a true tumour boundary.
-- Red boxes are threshold-derived visualization aids, not ground-truth localization.
-- Do not report the supplied PDF's T-PAL score as a result of this implementation. Only report measurements obtained from a reproducible local run, with its dataset split and configuration.
-- This project is for education and portfolio demonstration, not clinical use.
+The Evaluation, Explainability and Methodology pages work from saved result files even without the API; only the Classification page needs it. Set `VITE_API_BASE` if the API runs elsewhere.
+
+## API
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/health` | Liveness only |
+| GET | `/api/status` | Model state (`missing`, `not_loaded`, `ready`, `load_failed`), SHA-256, input shape, classes, TensorFlow/Keras versions |
+| POST | `/api/predict` | Classify one uploaded image (multipart field `file`) |
+
+```powershell
+curl.exe -F "file=@C:\path\to\mri.jpg" http://127.0.0.1:8000/api/predict
+```
+
+```json
+{
+  "filename": "mri.jpg",
+  "top_class": "meningioma",
+  "classes": [{"label": "meningioma", "score": 0.85}, "..."],
+  "scores": {"glioma": 0.08, "meningioma": 0.85, "notumor": 0.0, "pituitary": 0.07},
+  "preprocessing": {"decoder": "tensorflow", "image_size": 224},
+  "model": {"sha256": "8b7b4c2e…", "variant": "evaluated"},
+  "note": "Educational image-level classification only…"
+}
+```
+
+Errors are JSON `{"detail": "..."}`: 400 undecodable/empty/missing `file`, 413 file > 15 MB or too many pixels, 415 unsupported type, 503 model missing or failed to load (no server paths are leaked), 500 invalid model output.
+
+## Tests
+
+```powershell
+python -m pytest -q tests          # backend
+cd frontend; npm test; npm run build
+```
+
+## Repository structure
+
+```
+api.py                         FastAPI service
+src/brain_tumor_dl/            model, data, inference, serving, Grad-CAM, leakage audit helpers
+train.py, predict.py, app.py   baseline training / CLI inference / legacy Streamlit demo
+prepare_leakage_controlled_dataset.py   builds the leakage-controlled dataset copy
+make_gradcam_figure.py         generates the Grad-CAM figure from the evaluated checkpoint
+frontend/                      React + Vite dashboard (src/data holds the genuine result files)
+frontend/public/results/       figures used by the dashboard and this README
+docs/images/                   dashboard screenshots
+artifacts_finetune30_leakagecontrolled_20261026/   evaluated checkpoint + class list
+tests/                         pytest suite
+```
+
+`src/brain_tumor_dl/tpal*.py` and `train_tpal.py` are a separate, experimental PyTorch Transformer-style classifier that was **never trained end to end**; it has no results and is not part of the reported numbers. `app.py` is an older Streamlit demo that loads the legacy `artifacts/` model path, not the evaluated checkpoint.
+
+## Reproducibility
+
+The configuration of the evaluated run is recorded in the experiment record and shown on the dashboard's *Reproducibility* page (seed, split, class weights, library versions, git commit `f0cc2d9`). **Be aware of the scope:** the `train.py` in this repository implements the plain frozen/fine-tuning workflow; the exact script variant that used a group manifest, class weights and macro-F1 checkpoint selection is not included, so the run is documented and its checkpoint verifiable, but not reproducible with one command. The dataset-preparation and Grad-CAM scripts are included.
+
+## Limitations and ethical considerations
+
+- **Not for clinical use.** Not a medical device, not validated against radiologist ground truth, not tested prospectively or across scanners/sites.
+- **The split is not patient-level.** Slices of the same patient can appear on both sides, so the metrics are probably optimistic and do not demonstrate clinical generalisation.
+- **Near-duplicates may remain.** Only exact/near-identical images at the strictest hash threshold were audited and removed.
+- **Test-set reuse.** The same `Testing/` folder was used in earlier configuration comparisons.
+- **Softmax scores are not calibrated probabilities.**
+- **Grad-CAM is an approximate explanation**, not a tumour segmentation or localisation; it can highlight anatomy or artefacts. This project does **not** perform tumour segmentation.
+- **Single run, single seed:** no variance estimate or confidence intervals exist, and none are claimed.
+- **Class-level weakness:** glioma recall is 64 %; the glioma example in the Grad-CAM figure is misclassified and is shown on purpose.
+
+## Technologies
+
+Python 3.11 · TensorFlow/Keras · NumPy · Pillow · scikit-learn · FastAPI · Uvicorn · React 18 · Vite · React Router · Lucide icons · pytest · Node test runner · GitHub Actions.
+
+## Acknowledgements and references
+
+- Dataset: [Brain Tumor MRI Dataset](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset) on Kaggle (please cite the dataset and its original sources separately).
+- Sandler et al., *MobileNetV2: Inverted Residuals and Linear Bottlenecks*, CVPR 2018.
+- Selvaraju et al., *Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization*, ICCV 2017.
+
+Released under the [MIT License](LICENSE); see [CITATION.cff](CITATION.cff).

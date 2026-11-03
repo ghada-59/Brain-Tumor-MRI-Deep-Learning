@@ -1,34 +1,100 @@
-import { useEffect, useRef, useState } from "react";
-import { Brain, Check, CircleAlert, FileImage, LoaderCircle, Moon, Scan, ShieldAlert, ShieldCheck, Sun, Upload, X } from "lucide-react";
-const API=import.meta.env.VITE_API_BASE||"http://127.0.0.1:8000";
-export default function App(){
- const input=useRef(null);
- const [theme,setTheme]=useState(()=>localStorage.getItem("neuro-theme")||"dark");
- const [api,setApi]=useState("checking");
- const [status,setStatus]=useState(null);
- const [file,setFile]=useState(null);
- const [preview,setPreview]=useState("");
- const [result,setResult]=useState(null);
- const [busy,setBusy]=useState(false);
- const [error,setError]=useState("");
- useEffect(()=>{document.documentElement.dataset.theme=theme;localStorage.setItem("neuro-theme",theme)},[theme]);
- useEffect(()=>{fetch(API+"/api/status").then(r=>{if(!r.ok)throw new Error();return r.json()}).then(d=>{setStatus(d);setApi("online")}).catch(()=>setApi("offline"))},[]);
- useEffect(()=>{if(!file){setPreview("");return undefined}const url=URL.createObjectURL(file);setPreview(url);return()=>URL.revokeObjectURL(url)},[file]);
- function choose(next){setError("");setResult(null);if(!next)return;if(!/\.(png|jpe?g|webp|bmp)$/i.test(next.name)){setError("Choose a PNG, JPG, WEBP or BMP MRI image.");return}if(next.size>15*1024*1024){setError("Maximum upload size is 15 MB.");return}setFile(next)}
- async function predict(){if(!file){setError("Select an MRI image first.");return}setBusy(true);setError("");setResult(null);const body=new FormData();body.append("file",file);try{const response=await fetch(API+"/api/predict",{method:"POST",body});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.detail||"Inference failed.");setResult(data)}catch(e){setError(e.message||"Could not connect to the inference API.")}finally{setBusy(false)}}
- return <div className="neuro-shell"><aside className="sidebar"><a className="brand" href="#home"><span className="brand-mark"><Brain size={23}/></span><span><b>NEUROVISION</b><small>BRAIN MRI / DL</small></span></a><div className="side-label">WORKSPACE</div><div className="nav-active"><Scan size={17}/> Image classification <span>01</span></div><div className="workflow"><small>INFERENCE FLOW</small><div><span>01</span> Upload image</div><div><span>02</span> Preprocess 224 × 224</div><div><span>03</span> MobileNetV2 scores</div></div><div className="side-status"><span className={"led "+api}/><div><b>{api==="online"?"API connected":api==="checking"?"Checking service":"API offline"}</b><small>{status&&status.model_available?"Model weights found": "Local model weights required"}</small></div></div><div className="side-bottom"><ShieldCheck size={14}/> Educational only · Not diagnostic</div></aside>
- <main className="main" id="home"><header className="topbar"><div><span>BIOMEDICAL AI</span><i>/</i><strong>Brain MRI classification</strong></div><button className="theme" aria-label="Toggle theme" onClick={()=>setTheme(theme==="dark"?"light":"dark")}>{theme==="dark"?<Sun size={17}/>:<Moon size={17}/>}</button></header>
- <section className="hero"><div><span className="eyebrow">TRANSFER LEARNING · MOBILENETV2</span><h1>NeuroVision<span>.</span></h1><p>An image-level classification workspace for reviewing model scores across four MRI dataset classes. No tumour localization or segmentation is performed.</p></div><div className="hero-orbit"><div className="orbit-ring"><Brain size={36}/></div><span>224 PX</span></div></section>
- <div className="scope-banner"><ShieldAlert size={18}/><p><b>Research demonstration only.</b> Not a medical device. Do not use predictions to diagnose or exclude a brain tumour or guide treatment. Model scores are not clinically calibrated confidence.</p></div>
- {error&&<div className="alert"><CircleAlert size={17}/><span>{error}</span><button onClick={()=>setError("")}><X size={15}/></button></div>}
- {api==="offline"&&<div className="alert"><CircleAlert size={17}/><span>Python API is offline. Start the local service on port 8000 and refresh.</span></div>}
- {status&&!status.model_available&&<div className="alert warm"><FileImage size={17}/><span>Trained model weights are not tracked in this repository. Train locally and ensure artifacts/brain_tumor_mobilenetv2.keras exists before running inference.</span></div>}
- <div className="section-head"><span>01</span><h2>MRI input</h2><small>UPLOAD · PREVIEW · INFER</small></div>
- <div className="work-grid"><section className="card"><div className="card-head"><div><small>INPUT IMAGE</small><h3>Upload a brain MRI</h3></div><span className="step">A</span></div><input className="hidden" ref={input} type="file" accept=".png,.jpg,.jpeg,.webp,.bmp" onChange={e=>choose(e.target.files&&e.target.files[0])}/>
- {preview?<><div className="image-preview"><img src={preview} alt="Selected MRI preview"/></div><div className="file-row"><div><b>{file.name}</b><small>{(file.size/1024).toFixed(0)} KB · preview ready</small></div><button onClick={()=>{setFile(null);setResult(null);if(input.current)input.current.value=""}} aria-label="Remove image"><X size={15}/></button></div><p className="loaded"><Check size={14}/> Image loaded locally</p><button className="change" onClick={()=>input.current&&input.current.click()}><Upload size={14}/> Replace image</button></>:<button className="dropzone" onClick={()=>input.current&&input.current.click()} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();choose(e.dataTransfer.files&&e.dataTransfer.files[0])}}><span className="upload-symbol"><Upload size={22}/></span><b>Drop an MRI image here</b><small>or browse local files</small><span>PNG · JPG · WEBP · BMP / 15 MB MAX</span></button>}
- <div className="preprocess"><span>PREPROCESSING</span><b>RGB conversion → resize to 224 × 224</b><small>Uses the same preprocessing helper as the repository CLI and Streamlit interface.</small></div><button className="run" disabled={!file||busy||api!=="online"||!status?.model_available} onClick={predict}>{busy?<><LoaderCircle className="spin" size={16}/> Running model…</>:<>Run classification <span>→</span></>}</button></section>
- <aside className="card class-info"><div className="card-head"><div><small>MODEL INFORMATION</small><h3>Four dataset classes</h3></div><span className="step">B</span></div>{["glioma","meningioma","notumor","pituitary"].map((name,i)=><div className="class-row" key={name}><span className={"class-number n"+i}>{"0"+(i+1)}</span><div><b>{name==="notumor"?"No tumor":name.charAt(0).toUpperCase()+name.slice(1)}</b><small>{["Dataset label · glioma","Dataset label · meningioma","Dataset label · no tumour","Dataset label · pituitary"][i]}</small></div></div>)}<div className="model-fact"><span>BACKBONE</span><b>MobileNetV2</b><span>INPUT SHAPE</span><b>224 × 224 × 3</b><span>OUTPUT TYPE</span><b>Image-level class scores</b></div></aside></div>
- <div className="section-head results-head"><span>02</span><h2>Model output</h2><small>{result?"INFERENCE COMPLETE":"WAITING FOR INFERENCE"}</small></div>
- {result?<section className="result-card"><div className="prediction-head"><img src={result.preview} alt="Image sent to model"/><div><small>TOP-RANKED DATASET CLASS</small><h3>{result.top_class==="notumor"?"No tumor":result.top_class}</h3><span>Model output · not a diagnosis</span></div><span className="completed"><Check size={14}/> COMPLETE</span></div><div className="score-list">{result.classes.map((item,i)=><div className="score-row" key={item.label}><div className="score-label"><span>{String(i+1).padStart(2,"0")}</span><b>{item.label==="notumor"?"No tumor":item.label}</b><strong>{(item.score*100).toFixed(2)}%</strong></div><div className="score-track"><span style={{width:Math.max(0,Math.min(100,item.score*100))+"%"}}/></div></div>)}</div><div className="scope-banner result-warning"><ShieldCheck size={17}/><p>{result.note}</p></div></section>:<div className="empty"><Brain size={28}/><b>No inference results yet</b><span>Upload an MRI and run the trained model. If model weights are missing, the interface will report that limitation rather than fabricate scores.</span></div>}
- <footer><span>NEUROVISION <i>/</i> BRAIN MRI CLASSIFICATION</span><span>ACADEMIC PRACTICE · IMAGE LEVEL ONLY</span></footer></main></div>
+import { useEffect, useState } from "react";
+import { BrowserRouter, NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Brain, ChartColumn, Layers, Moon, ScanSearch, ShieldAlert, ShieldCheck, Sun, TriangleAlert, Home, Repeat } from "lucide-react";
+import Overview from "./pages/Overview.jsx";
+import Methodology from "./pages/Methodology.jsx";
+import Evaluation from "./pages/Evaluation.jsx";
+import Explainability from "./pages/Explainability.jsx";
+import Inference from "./pages/Inference.jsx";
+import Limitations from "./pages/Limitations.jsx";
+import Reproducibility from "./pages/Reproducibility.jsx";
+
+const NAV = [
+  { to: "/", label: "Overview", icon: Home, title: "Overview", end: true },
+  { to: "/methodology", label: "Data & methodology", icon: Layers, title: "Data & methodology" },
+  { to: "/evaluation", label: "Model evaluation", icon: ChartColumn, title: "Model evaluation" },
+  { to: "/explainability", label: "Explainability", icon: ScanSearch, title: "Grad-CAM explainability" },
+  { to: "/inference", label: "Classification", icon: Brain, title: "Run the classifier" },
+  { to: "/limitations", label: "Limitations", icon: TriangleAlert, title: "Limitations" },
+  { to: "/reproducibility", label: "Reproducibility", icon: Repeat, title: "Reproducibility" },
+];
+
+function Topbar({ theme, setTheme }) {
+  const { pathname } = useLocation();
+  const current = NAV.find((item) => (item.end ? pathname === item.to : pathname.startsWith(item.to))) || NAV[0];
+  return (
+    <header className="topbar">
+      <div>
+        <span>BIOMEDICAL AI</span>
+        <i>/</i>
+        <strong>{current.title}</strong>
+      </div>
+      <button className="theme" aria-label="Toggle theme" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+        {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+      </button>
+    </header>
+  );
+}
+
+export default function App() {
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem("neuro-theme") || "dark";
+    } catch {
+      return "dark";
+    }
+  });
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try {
+      localStorage.setItem("neuro-theme", theme);
+    } catch {
+      /* storage unavailable: theme simply is not remembered */
+    }
+  }, [theme]);
+
+  return (
+    <BrowserRouter>
+      <div className="neuro-shell">
+        <aside className="sidebar">
+          <NavLink className="brand" to="/">
+            <span className="brand-mark"><Brain size={23} /></span>
+            <span>
+              <b>NEUROVISION</b>
+              <small>BRAIN MRI / DL</small>
+            </span>
+          </NavLink>
+          <div className="side-label">DASHBOARD</div>
+          <nav className="side-nav" aria-label="Pages">
+            {NAV.map(({ to, label, icon: Icon, end }) => (
+              <NavLink key={to} to={to} end={end} className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}>
+                <Icon size={16} /> {label}
+              </NavLink>
+            ))}
+          </nav>
+          <div className="side-bottom">
+            <ShieldCheck size={14} /> Educational only · Not a diagnostic tool
+          </div>
+        </aside>
+        <main className="main">
+          <Topbar theme={theme} setTheme={setTheme} />
+          <Routes>
+            <Route path="/" element={<Overview />} />
+            <Route path="/methodology" element={<Methodology />} />
+            <Route path="/evaluation" element={<Evaluation />} />
+            <Route path="/explainability" element={<Explainability />} />
+            <Route path="/inference" element={<Inference />} />
+            <Route path="/limitations" element={<Limitations />} />
+            <Route path="/reproducibility" element={<Reproducibility />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+          <footer>
+            <span><ShieldAlert size={11} /> Research and portfolio demonstration · not clinically validated</span>
+            <span><i>MobileNetV2</i> · 4-class image-level classification · Grad-CAM</span>
+          </footer>
+        </main>
+      </div>
+    </BrowserRouter>
+  );
 }

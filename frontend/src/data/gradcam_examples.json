@@ -1,0 +1,58 @@
+{
+  "figure": "gradcam_examples.png",
+  "model_path": "artifacts_finetune30_leakagecontrolled_20261026/brain_tumor_mobilenetv2.keras",
+  "model_sha256": "8b7b4c2e423d18d72d72bb25773b906b03c2a9a6a8cf40b060de1e56a0d6f63f",
+  "selection": "first file of each class in sorted order",
+  "preprocessing": "inference.preprocess_image_bytes (identical to training)",
+  "rows": [
+    {
+      "image": "data_leakage_controlled_distance0/Testing/glioma/005b747c2d31de87ae23c3ef4b896817cb646dcc6b1c57cd7dab9cad117d87d4.jpg",
+      "image_sha256": "96464744306fd760062d1cc63d6b3b0bab77f5eeabd4a74483ee976eb04d2b01",
+      "true_label": "glioma",
+      "predicted_label": "meningioma",
+      "scores": {
+        "glioma": 0.451539,
+        "meningioma": 0.546983,
+        "notumor": 0.001348,
+        "pituitary": 0.00013
+      }
+    },
+    {
+      "image": "data_leakage_controlled_distance0/Testing/meningioma/008ea72f9c7d6ccdf7bcbf5e5c15d6b6bc03f556709fb7bdebd16e3929b19c72.jpg",
+      "image_sha256": "98856776c0ee4689f1239b0e57fff6e3645566b4e1c1a529dd36f5f38137d131",
+      "true_label": "meningioma",
+      "predicted_label": "meningioma",
+      "scores": {
+        "glioma": 0.008394,
+        "meningioma": 0.97432,
+        "notumor": 0.004587,
+        "pituitary": 0.012699
+      }
+    },
+    {
+      "image": "data_leakage_controlled_distance0/Testing/notumor/00906ec45bc8f4621dc59daf75d229ce96c0984b5c276e665491ca3eaf64712f.jpg",
+      "image_sha256": "1320e7811fbc67bd8e31530b4ab6996126b88bc5808e430e43d423f4cd637bcd",
+      "true_label": "notumor",
+      "predicted_label": "notumor",
+      "scores": {
+        "glioma": 0.000184,
+        "meningioma": 4e-06,
+        "notumor": 0.999811,
+        "pituitary": 1e-06
+      }
+    },
+    {
+      "image": "data_leakage_controlled_distance0/Testing/pituitary/0045786acbba70cd646478e00965d54f6fca10099087b792e11ab73894092d58.jpg",
+      "image_sha256": "e680decd85aa741deab1ff30a3b53ceaf28815b29fdef1ddd18bd22c00c7f4fe",
+      "true_label": "pituitary",
+      "predicted_label": "pituitary",
+      "scores": {
+        "glioma": 0.022414,
+        "meningioma": 0.076679,
+        "notumor": 0.004955,
+        "pituitary": 0.895952
+      }
+    }
+  ],
+  "note": "Grad-CAM is an approximate attribution map, not a segmentation or validated localisation."
+}

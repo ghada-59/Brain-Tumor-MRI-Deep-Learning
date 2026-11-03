@@ -55,3 +55,27 @@ artifacts/gradcam_testing/
 check_model_loading.py
 gradcam_test_heatmap.png
 gradcam_test_overlay.png
+
+
+# Frontend build output and dependencies
+frontend/node_modules/
+frontend/dist/
+
+# Datasets (never published)
+data_leakage_controlled_distance0/
+data_leakage_free/
+
+# Local experiment folders, except the evaluated checkpoint and its class list
+artifacts_*/*
+!artifacts_finetune30_leakagecontrolled_20261026/brain_tumor_mobilenetv2.keras
+!artifacts_finetune30_leakagecontrolled_20261026/class_names.json
+reports_audit_log_*/
+reports_near_duplicates_*/
+reports_clean_*/
+reports_finetune_*/
+reports_leakage_controlled_*/
+
+# Unfinished segmentation work: kept locally, not part of the published project
+src/brain_tumor_dl/segmentation/
+train_segmentation.py
+tests/test_*segmentation*.py

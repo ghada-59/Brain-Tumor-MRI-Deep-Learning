@@ -1,0 +1,346 @@
+{
+  "schema_version": 1,
+  "selected_experiment": {
+    "label": "Leakage-controlled fine-tuning (30 layers), 2026-10-26",
+    "artifacts_dir": "artifacts_finetune30_leakagecontrolled_20261026",
+    "reports_dir": "reports_finetune30_leakagecontrolled_20261026",
+    "checkpoint_path": "artifacts_finetune30_leakagecontrolled_20261026\\brain_tumor_mobilenetv2.keras",
+    "checkpoint_sha256": "8b7b4c2e423d18d72d72bb25773b906b03c2a9a6a8cf40b060de1e56a0d6f63f",
+    "git_commit": "f0cc2d9baf317028bdca68b84b3e6cb14eb9e511",
+    "software_versions": {
+      "python": "3.11.17",
+      "platform": "Windows-10-10.0.22631-SP0",
+      "tensorflow": "2.19.1",
+      "torch": "2.14.1+cpu",
+      "numpy": "2.0.2",
+      "pandas": "2.3.3",
+      "sklearn": "1.9.1",
+      "PIL": "12.3.0"
+    },
+    "architecture": "MobileNetV2 transfer learning (fine-tuned, last 30 layers)",
+    "data_dir": "data_leakage_controlled_distance0",
+    "group_manifest": "data_leakage_controlled_distance0\\train_validation_groups_by_path.json",
+    "seed": 42,
+    "validation_split": 0.15,
+    "image_size": [
+      224,
+      224
+    ],
+    "fine_tune_layers": 30,
+    "selection_metric": "val_macro_f1",
+    "class_weight": {
+      "glioma": 0.8877422072451558,
+      "meningioma": 0.966743119266055,
+      "notumor": 1.337246192893401,
+      "pituitary": 0.9163043478260869
+    },
+    "requested_epochs": 10,
+    "actual_epochs_frozen": 10,
+    "actual_epochs_finetune": 5
+  },
+  "class_names": [
+    "glioma",
+    "meningioma",
+    "notumor",
+    "pituitary"
+  ],
+  "test_metrics": {
+    "test_accuracy": 0.8346007604562737,
+    "test_macro_f1": 0.828450174325987,
+    "test_weighted_f1": 0.8294340218498085,
+    "test_image_count": 1578
+  },
+  "classification_report": {
+    "glioma": {
+      "precision": 0.9459459459459459,
+      "recall": 0.6413612565445026,
+      "f1-score": 0.7644305772230889,
+      "support": 382.0
+    },
+    "meningioma": {
+      "precision": 0.7220843672456576,
+      "recall": 0.7348484848484849,
+      "f1-score": 0.7284105131414268,
+      "support": 396.0
+    },
+    "notumor": {
+      "precision": 0.8283898305084746,
+      "recall": 0.9775,
+      "f1-score": 0.8967889908256881,
+      "support": 400.0
+    },
+    "pituitary": {
+      "precision": 0.8783783783783784,
+      "recall": 0.975,
+      "f1-score": 0.9241706161137441,
+      "support": 400.0
+    },
+    "accuracy": 0.8346007604562737,
+    "macro avg": {
+      "precision": 0.8436996305196142,
+      "recall": 0.8321774353482468,
+      "f1-score": 0.828450174325987,
+      "support": 1578.0
+    },
+    "weighted avg": {
+      "precision": 0.8428415997055594,
+      "recall": 0.8346007604562737,
+      "f1-score": 0.8294340218498085,
+      "support": 1578.0
+    }
+  },
+  "confusion_matrix": {
+    "class_names": [
+      "glioma",
+      "meningioma",
+      "notumor",
+      "pituitary"
+    ],
+    "matrix": [
+      [
+        245,
+        95,
+        30,
+        12
+      ],
+      [
+        12,
+        291,
+        51,
+        42
+      ],
+      [
+        1,
+        8,
+        391,
+        0
+      ],
+      [
+        1,
+        9,
+        0,
+        390
+      ]
+    ],
+    "axes": "rows = true label, columns = predicted label",
+    "model": "artifacts_finetune30_leakagecontrolled_20261026\\brain_tumor_mobilenetv2.keras",
+    "data_dir": "data_leakage_controlled_distance0",
+    "note": "Re-derived from a second deterministic inference pass over the already-selected, frozen checkpoint. No model selection or hyperparameter tuning used this pass."
+  },
+  "training_history_frozen": [
+    {
+      "epoch": "0",
+      "accuracy": "0.7257413864135742",
+      "learning_rate": "0.0010000000474974513",
+      "loss": "0.6802980303764343",
+      "val_accuracy": "0.8061911463737488",
+      "val_loss": "0.484706312417984",
+      "val_macro_f1": "0.8121735809384136"
+    },
+    {
+      "epoch": "1",
+      "accuracy": "0.84650057554245",
+      "learning_rate": "0.0010000000474974513",
+      "loss": "0.4049172103404999",
+      "val_accuracy": "0.83580082654953",
+      "val_loss": "0.4174244999885559",
+      "val_macro_f1": "0.8400630177703067"
+    },
+    {
+      "epoch": "2",
+      "accuracy": "0.8721233606338501",
+      "learning_rate": "0.0010000000474974513",
+      "loss": "0.3450155258178711",
+      "val_accuracy": "0.851951539516449",
+      "val_loss": "0.3621559739112854",
+      "val_macro_f1": "0.8570119539427101"
+    },
+    {
+      "epoch": "3",
+      "accuracy": "0.8763938546180725",
+      "learning_rate": "0.0010000000474974513",
+      "loss": "0.33107468485832214",
+      "val_accuracy": "0.8586810231208801",
+      "val_loss": "0.3609856069087982",
+      "val_macro_f1": "0.8622046287832132"
+    },
+    {
+      "epoch": "4",
+      "accuracy": "0.8899169564247131",
+      "learning_rate": "0.0010000000474974513",
+      "loss": "0.288396954536438",
+      "val_accuracy": "0.8654105067253113",
+      "val_loss": "0.34227412939071655",
+      "val_macro_f1": "0.8673454568929668"
+    },
+    {
+      "epoch": "5",
+      "accuracy": "0.8896797299385071",
+      "learning_rate": "0.0010000000474974513",
+      "loss": "0.2806065082550049",
+      "val_accuracy": "0.8802153468132019",
+      "val_loss": "0.2948997914791107",
+      "val_macro_f1": "0.8849693892512505"
+    },
+    {
+      "epoch": "6",
+      "accuracy": "0.9067615866661072",
+      "learning_rate": "0.0010000000474974513",
+      "loss": "0.2562948167324066",
+      "val_accuracy": "0.8829071521759033",
+      "val_loss": "0.2923349440097809",
+      "val_macro_f1": "0.8861864179746858"
+    },
+    {
+      "epoch": "7",
+      "accuracy": "0.9074733257293701",
+      "learning_rate": "0.0010000000474974513",
+      "loss": "0.24583643674850464",
+      "val_accuracy": "0.8896366357803345",
+      "val_loss": "0.2971141040325165",
+      "val_macro_f1": "0.8946207430987825"
+    },
+    {
+      "epoch": "8",
+      "accuracy": "0.8979833722114563",
+      "learning_rate": "0.0010000000474974513",
+      "loss": "0.25574538111686707",
+      "val_accuracy": "0.8815612196922302",
+      "val_loss": "0.3167772889137268",
+      "val_macro_f1": "0.8859191301038412"
+    },
+    {
+      "epoch": "9",
+      "accuracy": "0.9067615866661072",
+      "learning_rate": "0.0003000000142492354",
+      "loss": "0.24030284583568573",
+      "val_accuracy": "0.8815612196922302",
+      "val_loss": "0.29582372307777405",
+      "val_macro_f1": "0.8850190833325731"
+    }
+  ],
+  "training_history_finetune": [
+    {
+      "epoch": "0",
+      "accuracy": "0.9053380489349365",
+      "learning_rate": "9.999999747378752e-06",
+      "loss": "0.24616777896881104",
+      "val_accuracy": "0.8829071521759033",
+      "val_loss": "0.2887917757034302",
+      "val_macro_f1": "0.8865263805824908"
+    },
+    {
+      "epoch": "1",
+      "accuracy": "0.9126927852630615",
+      "learning_rate": "9.999999747378752e-06",
+      "loss": "0.21492932736873627",
+      "val_accuracy": "0.9071332216262817",
+      "val_loss": "0.23565761744976044",
+      "val_macro_f1": "0.9114919425931802"
+    },
+    {
+      "epoch": "2",
+      "accuracy": "0.9290628433227539",
+      "learning_rate": "9.999999747378752e-06",
+      "loss": "0.18756620585918427",
+      "val_accuracy": "0.8950201869010925",
+      "val_loss": "0.2589751183986664",
+      "val_macro_f1": "0.8985293588619083"
+    },
+    {
+      "epoch": "3",
+      "accuracy": "0.9333333373069763",
+      "learning_rate": "9.999999747378752e-06",
+      "loss": "0.17286238074302673",
+      "val_accuracy": "0.8990578651428223",
+      "val_loss": "0.23976178467273712",
+      "val_macro_f1": "0.9030900252008169"
+    },
+    {
+      "epoch": "4",
+      "accuracy": "0.9473309516906738",
+      "learning_rate": "2.9999998787388904e-06",
+      "loss": "0.1422741562128067",
+      "val_accuracy": "0.8963660597801208",
+      "val_loss": "0.24237070977687836",
+      "val_macro_f1": "0.9000670439778462"
+    }
+  ],
+  "leakage_summary": {
+    "source": "data_leakage_free",
+    "output": "data_leakage_controlled_distance0",
+    "near_duplicates_csv": "reports_near_duplicates_20261021\\near_duplicate_candidates.csv",
+    "max_hamming_distance_excluded": 0,
+    "policy": "Any connected component (at or below max_hamming_distance) touching a Testing/ image has all its Training/ members excluded from Training/ in the output. Testing/ is never modified. Components confined to Training/ are recorded as atomic train/validation groups rather than being split, via train_validation_groups_by_path.json.",
+    "total_connected_components_at_threshold": 236,
+    "test_touching_components": 187,
+    "pure_training_components_with_2plus_members": 49,
+    "total_training_images_excluded": 338,
+    "class_balance": {
+      "before": {
+        "Training": {
+          "glioma": 1396,
+          "meningioma": 1288,
+          "notumor": 1257,
+          "pituitary": 1355
+        },
+        "Testing": {
+          "glioma": 382,
+          "meningioma": 396,
+          "notumor": 400,
+          "pituitary": 400
+        }
+      },
+      "after": {
+        "Training": {
+          "glioma": 1396,
+          "meningioma": 1282,
+          "notumor": 927,
+          "pituitary": 1353
+        },
+        "Testing": {
+          "glioma": 382,
+          "meningioma": 396,
+          "notumor": 400,
+          "pituitary": 400
+        }
+      },
+      "training_images_lost_per_class": {
+        "meningioma": 6,
+        "notumor": 330,
+        "pituitary": 2
+      },
+      "training_images_kept_per_class": {
+        "glioma": 1396,
+        "meningioma": 1282,
+        "notumor": 927,
+        "pituitary": 1353
+      }
+    },
+    "limitations": [
+      "Grouping is based only on the specific near-duplicate pairs this audit found at the chosen threshold; it cannot detect near-duplicates the audit missed (including anything above --max-distance).",
+      "Image-level grouping does not establish or verify patient-level independence; this dataset has no patient identifiers.",
+      "The near-duplicate audit only compared images across DIFFERENT splits (train/validation/test); it does not detect near-duplicate clusters entirely within one split beyond what the train-vs-validation comparison happened to surface, so a small residual risk of undetected within-split duplication remains."
+    ]
+  },
+  "historical_comparison": {
+    "note": "Historical runs were trained on data_leakage_free/, which still contains the near-duplicate training images this project's audit identified. They also reused the same Testing/ folder for informal comparison across configurations. Kept here as labeled historical context only, not as the primary result.",
+    "configs": [
+      {
+        "label": "Baseline (0 fine-tuned layers, historical)",
+        "test_accuracy": 0.8067173637515843,
+        "test_macro_f1": 0.7960923974974614
+      },
+      {
+        "label": "Fine-tuned (30 layers, historical)",
+        "test_accuracy": 0.8593155893536122,
+        "test_macro_f1": 0.854042748309642
+      },
+      {
+        "label": "Fine-tuned (20 layers, historical)",
+        "test_accuracy": 0.829531051964512,
+        "test_macro_f1": 0.8217926172750204
+      }
+    ]
+  }
+}
