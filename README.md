@@ -206,6 +206,8 @@ python -m pytest -q tests          # backend
 cd frontend; npm test; npm run build
 ```
 
+The current `main` revision `5407776bd0` passed both GitHub Actions workflows on 2026-11-03: [Python tests](https://github.com/ghada-59/Brain-Tumor-MRI-Deep-Learning/actions/runs/41711624908) and [React dashboard build](https://github.com/ghada-59/Brain-Tumor-MRI-Deep-Learning/actions/runs/41711624992). These checks validate the repository's automated software tests and frontend build; they do not establish patient-level generalization or clinical validity.
+
 ## Repository structure
 
 ```
